@@ -12,7 +12,7 @@
 """Wallpaper and palette backend for the Quickshell shell.
 
 Sets the wallpaper, extracts a palette from it, and writes that palette into
-the other themed programs: kitty, btop, cava, yazi, neovim, imv, GTK, Qt and
+the other themed programs: kitty, btop, cava, imv, GTK, Qt and
 KDE, the Papirus folder icons, Vesktop, Spotify and VSCodium. Generated
 files live in the XDG state directory unless a program only reads its theme
 from its own config directory.
