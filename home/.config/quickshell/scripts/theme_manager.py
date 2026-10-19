@@ -1475,6 +1475,16 @@ def write_gtk_theme(colors):
         except OSError as error:
             sys.stderr.write(f"Cannot write {path}: {error}\n")
 
+    # gtk-icon-theme-name in settings.ini is only a fallback: GTK3/GTK4 apps
+    # remember the last-set theme in dconf, so a renamed icon theme leaves
+    # them pointing at a directory that is gone (Nautilus draws plain icons).
+    # Keep dconf in step at every push.
+    gsettings = shutil.which("gsettings")
+    if gsettings and os.path.isdir(ICON_THEME_DIR):
+        subprocess.run([gsettings, "set", "org.gnome.desktop.interface",
+                        "icon-theme", ICON_THEME_NAME], check=False,
+                       stdout=subprocess.DEVNULL)
+
 
 def icon_source_root():
     """The Papirus-Dark directory, searched in XDG data order, or None."""
