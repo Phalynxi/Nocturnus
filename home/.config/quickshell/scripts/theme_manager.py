@@ -743,6 +743,66 @@ def write_greetings(colors):
     greeting.push(paint)
 
 
+def write_cursor_theme(colors):
+    """Recolor the hyprcursor theme's SVGs into this palette.
+
+    Every cursor is a single- or multi-draw SVG inside a `.hlc` zip, drawn
+    in two structural colours: a `#2e509e` body fill and a `#ffffff`
+    outline. The body takes the accent pulled towards the background — a
+    cursor of the wallpaper's own family — and the outline the text colour,
+    so the pointer stays lit over any wallpaper. Each zip is rewritten in
+    place, the hotspots and sizes untouched, then the theme is applied
+    again so every running surface re-bakes its cursors.
+    """
+    import zipfile
+
+    root = os.path.expanduser("~/.local/share/icons/nocturnus-cursor/hyprcursors")
+    if not os.path.isdir(root):
+        return
+    body = mix(colors["background"], colors["accent"], 0.45)
+    outline = colors["text"]
+    for name in sorted(os.listdir(root)):
+        if not name.endswith(".hlc"):
+            continue
+        path = os.path.join(root, name)
+        if not zipfile.is_zipfile(path):
+            continue
+        with zipfile.ZipFile(path) as archive:
+            contents = []
+            changed = False
+            for entry in archive.namelist():
+                raw = archive.read(entry)
+                if entry.endswith(".svg"):
+                    text = raw.decode("utf-8")
+                    if "#2e509e" in text or "#ffffff" in text.lower():
+                        text = text.replace("#2e509e", body).replace(
+                            "#FFFFFF", outline).replace("#ffffff", outline)
+                        raw = text.encode("utf-8")
+                        changed = True
+                contents.append((entry, raw))
+        if not changed:
+            continue
+        temporary = path + ".tmp"
+        with zipfile.ZipFile(temporary, "w", zipfile.ZIP_DEFLATED) as out:
+            for entry, raw in contents:
+                out.writestr(entry, raw)
+        os.replace(temporary, path)
+
+    # Apply the theme again: Hyprland re-bakes the cursor cache now that
+    # the SVGs under it changed, and running apps follow.
+    size = "24"
+    try:
+        sizes = subprocess.run(["hyprctl", "getoption", "cursor:size"],
+                               capture_output=True, text=True).stdout
+        for line in sizes.splitlines():
+            if line.startswith("int:"):
+                size = line.split()[-1]
+    except OSError:
+        pass
+    subprocess.run(["hyprctl", "setcursor", "nocturnus-cursor", size],
+                   capture_output=True)
+
+
 def build_btop_theme(colors):
     """btop's 48 theme colours, derived from the palette's 13.
 
@@ -3972,6 +4032,7 @@ def main():
         write_btop_theme(colors)
         write_cava_theme(colors)
         write_yazi_flavor(colors)
+        write_cursor_theme(colors)
         push_nvim_colorscheme(colors)
         write_imv_config(colors)
         write_gtk_theme(colors)

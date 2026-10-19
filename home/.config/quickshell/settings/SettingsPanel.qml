@@ -276,31 +276,34 @@ Item {
 
                 // ── SIGNATURE ───────────────────────────────────────────────
                 //
-                // The name in the script face, beside the palette board painted
-                // in the active palette.
-                Item {
+                // The name in spaced caps — the wordmark, not the script —
+                // with its subtitle underneath. No swatch beside it: the
+                // whole window is already painted in the palette.
+                ColumnLayout {
                     Layout.fillWidth: true
-                    Layout.topMargin: 4
-                    implicitHeight: 38
+                    Layout.topMargin: 6
+                    spacing: 1
 
-                    Row {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: 8
+                    Item { Layout.fillWidth: true; implicitHeight: 2 }
 
-                        PaletteBoard {
-                            anchors.verticalCenter: parent.verticalCenter
-                            size: 34
-                        }
-
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: "nocturnus"
-                            font.family: Theme.fontSignature
-                            font.pixelSize: 28
-                            color: Theme.text
-                        }
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: "N O C T U R N U S"
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 15
+                        font.weight: Font.DemiBold
+                        color: Theme.text
                     }
+
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: Tr.t("settings")
+                        font.family: Theme.fontMono
+                        font.pixelSize: 11
+                        color: Theme.textMuted
+                    }
+
+                    Item { Layout.fillWidth: true; implicitHeight: 2 }
                 }
 
                 Rectangle {
