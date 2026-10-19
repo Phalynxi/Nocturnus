@@ -44,7 +44,7 @@ hl.window_rule({
     match = {
         -- A regex, not a Lua pattern.
         class = "^(org\\.quickshell)$",
-        title = "^(Settings)$",
+        title = "^(Nocturnus Settings)$",
     },
 
     float  = true,

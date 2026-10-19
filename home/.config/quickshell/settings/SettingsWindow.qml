@@ -33,12 +33,15 @@ FloatingWindow {
     signal panelRequested(string panel)
 
     // Matched by the window rule in `windowrules.lua`.
-    title: "Settings"
+    title: "Nocturnus Settings"
 
     implicitWidth: 980
     implicitHeight: 680
 
-    color: Theme.island
+    // Over a frosted ground: translucent where the style says glass, so the
+    // compositor blur behind it lights the pane. A solid style keeps the
+    // island solid.
+    color: Theme.solid ? Theme.island : Qt.rgba(0, 0, 0, 0.86)
     visible: root.shown
 
     onVisibleChanged: {

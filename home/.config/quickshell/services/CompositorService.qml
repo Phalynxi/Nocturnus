@@ -392,7 +392,13 @@ Singleton {
             `hl.layer_rule({ name = "nocturnus-bar-blur", match = { namespace = "^(nocturnus-bar)$" }, blur = true, ignore_alpha = 0.12, enabled = ${
                 Theme.solid ? "false" : "true"} }) `
             + `hl.layer_rule({ name = "nocturnus-dock-blur", match = { namespace = "^(nocturnus-dock)$" }, blur = true, ignore_alpha = 0.12, enabled = ${
-                root.dockSeeThrough ? "true" : "false"} })`]
+                root.dockSeeThrough ? "true" : "false"} }) `
+            // The overlays always carry a translucent scrim over the desk,
+            // so their blur is on whatever the style says; gaming mode's
+            // blur-off covers them the way it covers the rest.
+            + `hl.layer_rule({ name = "nocturnus-deck-blur", match = { namespace = "^(nocturnus-deck)$" }, blur = true, ignore_alpha = 0.12, enabled = true }) `
+            + `hl.layer_rule({ name = "nocturnus-launcher-blur", match = { namespace = "^(nocturnus-launcher)$" }, blur = true, ignore_alpha = 0.12, enabled = true }) `
+            + `hl.layer_rule({ name = "nocturnus-walls-blur", match = { namespace = "^(nocturnus-wallpapers)$" }, blur = true, ignore_alpha = 0.12, enabled = true })`]
         root.groundSetter.running = true
     }
 

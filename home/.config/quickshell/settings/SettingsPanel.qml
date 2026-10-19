@@ -268,8 +268,6 @@ Item {
             Layout.fillHeight: true
             radius: Theme.radiusLarge
             color: Theme.islandSurface
-            border.color: Theme.islandBorder
-            border.width: 1
 
             ColumnLayout {
                 anchors.fill: parent
@@ -308,12 +306,10 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 30
-                    radius: Theme.radiusSmall
-                    color: Theme.island
-                    border.color: search.activeFocus ? Theme.accent : Theme.islandBorder
-                    border.width: 1
+                    radius: 15
+                    color: search.activeFocus ? Theme.islandSurfaceHover : Theme.island
 
-                    Behavior on border.color { ColorAnimation { duration: Theme.durationFast } }
+                    Behavior on color { ColorAnimation { duration: Theme.durationFast } }
 
                     RowLayout {
                         anchors.fill: parent
@@ -410,14 +406,11 @@ Item {
                         Rectangle {
                             visible: !entry.modelData.heading
                             anchors.fill: parent
-                            radius: Theme.radiusSmall
-                            color: entry.active ? Theme.islandSurfaceHover
-                                : (entryMouse.containsMouse ? Theme.island : "transparent")
-                            border.color: entry.active ? Theme.accent : "transparent"
-                            border.width: 1
+                            radius: 15
+                            color: entry.active ? Theme.accent
+                                : entryMouse.containsMouse ? Theme.islandSurfaceHover : "transparent"
 
                             Behavior on color { ColorAnimation { duration: Theme.durationFast } }
-                            Behavior on border.color { ColorAnimation { duration: Theme.durationFast } }
 
                             RowLayout {
                                 anchors.fill: parent
@@ -429,7 +422,8 @@ Item {
                                     text: entry.modelData.icon ?? ""
                                     font.family: Theme.fontMono
                                     font.pixelSize: 13
-                                    color: entry.active ? Theme.accent : Theme.textMuted
+                                    color: entry.active ? Theme.accentText
+                                        : entryMouse.containsMouse ? Theme.text : Theme.textMuted
                                 }
 
                                 Text {
@@ -439,7 +433,7 @@ Item {
                                     font.family: Theme.fontFamily
                                     font.pixelSize: Theme.fontSizeSmall
                                     font.weight: entry.active ? Font.DemiBold : Font.Normal
-                                    color: entry.active ? Theme.accent : Theme.text
+                                    color: entry.active ? Theme.accentText : Theme.text
                                 }
                             }
 
