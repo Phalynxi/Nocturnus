@@ -51,6 +51,12 @@ QtObject {
         return style === "glass" ? Qt.rgba(0, 0, 0, 0.60) : root.island
     }
 
+    // The dock's ground. Lighter glass grounds go grey over bright
+    // wallpapers, and the capsule stops reading as part of the desk's black
+    // family, so the dock drinks deeper than the bar's ground.
+    function dockGroundOf(style: string): color {
+        return style === "glass" ? Qt.rgba(0, 0, 0, 0.86) : root.island
+    }
     function rimOf(style: string): color {
         // No border on the glass look; shadows carry the edge.
         return style === "glass" ? "transparent" : "#262626"

@@ -84,6 +84,11 @@ if hl.plugin.hyprglass ~= nil then
     hl.plugin.hyprglass.config({
         enabled = false,
 
+        -- Glass on layer surfaces too: the bar's pills, the dock, the deck
+        -- and the launcher all refract the desk under them, not just blur
+        -- it. `mask_threshold` is per layer, set by `hg.layer` calls below.
+        layers = { enabled = true },
+
         blur_strength        = 0.7,    -- default 2.0
 
         -- Edge effects, all raised so the pane still reads at 0.90 opacity.
@@ -108,6 +113,17 @@ if hl.plugin.hyprglass ~= nil then
             adaptive_dim = 0.0,
         },
     })
+
+    -- The layers given glass, named one by one so the rest — the wallpaper
+    -- daemon's underlay above all — keep Hyprland's blur. The threshold sits
+    -- between the grounds (0.60 and up) and the pill shadows (0.50), so the
+    -- shadows stay matte instead of turning into lenses of their own.
+    hl.plugin.hyprglass.layer("nocturnus-bar",        { mask_threshold = 0.55 })
+    hl.plugin.hyprglass.layer("nocturnus-dock",       { mask_threshold = 0.55 })
+    hl.plugin.hyprglass.layer("nocturnus-desktop",    { mask_threshold = 0.55 })
+    hl.plugin.hyprglass.layer("nocturnus-deck",       { mask_threshold = 0.55 })
+    hl.plugin.hyprglass.layer("nocturnus-launcher",   { mask_threshold = 0.55 })
+    hl.plugin.hyprglass.layer("nocturnus-wallpapers", { mask_threshold = 0.55 })
 end
 
 

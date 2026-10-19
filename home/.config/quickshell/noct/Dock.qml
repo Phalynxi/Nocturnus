@@ -40,7 +40,7 @@ PanelWindow {
         width: row.width + 24
         height: row.height
         radius: height / 2
-        color: Theme.islandGround
+        color: Theme.dockGroundOf(Theme.dockStyle)
 
         // the shadow instead of an edge, same as the bar's pills
         Item {

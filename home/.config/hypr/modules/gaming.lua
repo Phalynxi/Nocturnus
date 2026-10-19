@@ -55,6 +55,13 @@ local function fade_to(want)
         and { decoration = { blur = { enabled = false } } }
         or { decoration = { blur = { enabled = true, size = SIZE, passes = PASSES } } }
     hl.config(conf)
+    -- Liquid glass too: hyprglass owns the blur when it is on, so gaming
+    -- mode dismisses it rather than paying its refraction mid-fight. On the
+    -- way back the window-glass setting's choice is restored (true while
+    -- Appearance has it on; CompositorService corrects it on any change).
+    if hl.plugin.hyprglass ~= nil then
+        hl.plugin.hyprglass.config({ enabled = not want })
+    end
     on = want
     fading_to = nil
 end

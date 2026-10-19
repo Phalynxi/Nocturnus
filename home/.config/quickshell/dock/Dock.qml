@@ -232,7 +232,7 @@ PanelWindow {
 
             anchors.fill: parent
             radius: Theme.dockRadius
-            color: Theme.dockGlass ? Theme.groundOf(Theme.dockStyle)
+            color: Theme.dockGlass ? Theme.dockGroundOf(Theme.dockStyle)
                 : Qt.rgba(Theme.island.r, Theme.island.g, Theme.island.b,
                           SettingsService.dockOpacity / 100)
             border.color: Theme.rimOf(Theme.dockStyle)
@@ -460,7 +460,7 @@ PanelWindow {
             width: name.implicitWidth + 20
             height: name.implicitHeight + 12
             radius: Theme.radiusMedium
-            color: Theme.groundOf(Theme.dockStyle)
+            color: Theme.dockGroundOf(Theme.dockStyle)
             border.color: Theme.rimOf(Theme.dockStyle)
             border.width: 1
 
