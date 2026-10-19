@@ -1,7 +1,7 @@
 // ╭──────────────────────────────────────────────────────────────────────────╮
 // │                                                                          │
 // │   B A R                                                                  │
-// │   a full-width capsule · workspaces, clock, media and the tray           │
+// │   a row of pills · workspaces, the clock, and the tray                   │
 // │                                                                          │
 // ╰──────────────────────────────────────────────────────────────────────────╯
 
@@ -35,32 +35,30 @@ PanelWindow {
         right: 12
     }
 
-    implicitHeight: 48
-    // 48 of capsule plus the 8px margin above it, so windows tuck under.
-    exclusiveZone: 56
+    // The pills' row: one capsule blend reserved for windows.
+    readonly property int barHeight: Theme.capsuleHeight
+    implicitHeight: root.barHeight + 4
+    exclusiveZone: root.barHeight + 12
     color: "transparent"
 
-    // report
     readonly property string screenName: Quickshell.screens.length > 0
         ? Quickshell.screens[0].name : ""
     readonly property int activeWs: root.screenName !== ""
         ? HyprlandService.activeOn(root.screenName) : 1
 
-    Rectangle {
-        id: capsule
+    // ── left · workspaces ────────────────────────────────────────────────────
 
-        anchors.fill: parent
-        radius: 24
-        color: Theme.islandGround
-        border.width: Theme.glass ? 1 : 0
-        border.color: Theme.islandBorder
+    Pill {
+        id: workspacesPill
 
-        // ── left · workspaces ────────────────────────────────────────────────
+        x: 0
+        y: 2
+        height: root.barHeight - 4
+        width: workspacesRow.width + 28
 
         Row {
-            anchors.left: parent.left
-            anchors.leftMargin: 10
-            anchors.verticalCenter: parent.verticalCenter
+            id: workspacesRow
+            anchors.centerIn: parent
             spacing: 4
 
             Repeater {
@@ -73,7 +71,7 @@ PanelWindow {
                     readonly property bool isActive: id === root.activeWs
                     readonly property bool occupied: HyprlandService.isOccupied(id)
 
-                    width: isActive ? 32 : height
+                    width: isActive ? 32 : 26
                     height: 26
                     radius: 13
                     color: isActive ? Theme.accent
@@ -102,16 +100,24 @@ PanelWindow {
                 }
             }
         }
+    }
 
-        // ── centre · clock and what is playing ───────────────────────────────
+    // ── centre · what is playing and the clock ───────────────────────────────
+
+    Pill {
+        id: centrePill
+
+        anchors.horizontalCenter: parent.horizontalCenter
+        y: 2
+        height: root.barHeight - 4
+        width: centre.width + 32
 
         Item {
             id: hub
 
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.verticalCenter: parent.verticalCenter
+            anchors.centerIn: parent
             width: centre.width
-            height: 30
+            height: parent.height
 
             readonly property var moment: new Date()
             readonly property string title: MediaService.available && MediaService.title !== ""
@@ -136,7 +142,7 @@ PanelWindow {
                 spacing: 10
 
                 Text {
-                    visible: parent.parent.title !== ""
+                    visible: hub.title !== ""
                     text: MediaService.playing ? "󰎈" : "󰏤"
                     font.family: Theme.fontMono
                     font.pixelSize: 14
@@ -145,8 +151,8 @@ PanelWindow {
                 }
 
                 Text {
-                    visible: parent.parent.title !== ""
-                    text: parent.parent.title
+                    visible: hub.title !== ""
+                    text: hub.title
                     font.family: Theme.fontFamily
                     font.pixelSize: 12
                     color: Theme.textMuted
@@ -157,7 +163,7 @@ PanelWindow {
                 }
 
                 Text {
-                    visible: parent.parent.title !== ""
+                    visible: hub.title !== ""
                     text: "·"
                     font.family: Theme.fontFamily
                     font.pixelSize: 12
@@ -173,7 +179,7 @@ PanelWindow {
                     color: Theme.text
                     text: {
                         const pad = h => String(h).padStart(2, "0")
-                        return pad(parent.parent.moment.getHours()) + ":" + pad(parent.parent.moment.getMinutes())
+                        return pad(hub.moment.getHours()) + ":" + pad(hub.moment.getMinutes())
                     }
                 }
 
@@ -190,17 +196,25 @@ PanelWindow {
                     font.family: Theme.fontFamily
                     font.pixelSize: 12
                     color: Theme.textMuted
-                    text: Qt.formatDate(parent.parent.moment, "ddd d MMM")
+                    text: Qt.formatDate(hub.moment, "ddd d MMM")
                 }
             }
         }
+    }
 
-        // ── right · tray, net, sound, battery, buttons ───────────────────────
+    // ── right · tray, net, sound, battery, buttons ───────────────────────────
+
+    Pill {
+        id: rightPill
+
+        anchors.right: parent.right
+        y: 2
+        height: root.barHeight - 4
+        width: status.width + 24
 
         Row {
-            anchors.right: parent.right
-            anchors.rightMargin: 10
-            anchors.verticalCenter: parent.verticalCenter
+            id: status
+            anchors.centerIn: parent
             spacing: 6
 
             // tray icons, drawn dim for the dark bar
@@ -278,10 +292,5 @@ PanelWindow {
                 onClicked: root.wallpapersRequested()
             }
         }
-    }
-
-    // input only inside the capsule: the gutters pass clicks through
-    mask: Region {
-        item: capsule
     }
 }

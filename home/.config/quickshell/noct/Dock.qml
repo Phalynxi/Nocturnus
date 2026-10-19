@@ -6,6 +6,7 @@
 // ╰──────────────────────────────────────────────────────────────────────────╯
 
 import QtQuick
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Wayland
 import "../dock"
@@ -36,12 +37,30 @@ PanelWindow {
 
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
-        width: row.width + 20
+        width: row.width + 24
         height: row.height
         radius: height / 2
         color: Theme.islandGround
-        border.width: Theme.dockGlass ? 1 : 0
-        border.color: Theme.islandBorder
+
+        // the shadow instead of an edge, same as the bar's pills
+        Item {
+            anchors.fill: parent
+            anchors.margins: -16
+            layer.enabled: true
+            layer.effect: MultiEffect {
+                blurEnabled: true
+                blur: 1.0
+                blurMax: 32
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                anchors.topMargin: 0
+                anchors.bottomMargin: 12
+                radius: parent.height / 2
+                color: Qt.rgba(0, 0, 0, 0.5)
+            }
+        }
 
         Row {
             id: row

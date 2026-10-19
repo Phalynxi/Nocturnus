@@ -12,7 +12,7 @@
 -- Quickshell owns org.freedesktop.Notifications, so no separate notification
 -- daemon runs: only one process can hold that bus name.
 hl.on("hyprland.start", function()
-    hl.exec_cmd("qs -p /home/octal/.config/quickshell/nocturnus.qml -d")        -- · bar, dock, launcher, wallpapers (quickshell)
+    hl.exec_cmd("qs -d")        -- · bar and notifications (quickshell)
     hl.exec_cmd("tide-island")  -- · dynamic island below the bar
     hl.exec_cmd("awww-daemon")  -- · wallpaper
 end)

@@ -41,36 +41,4 @@ Rectangle {
         cursorShape: Qt.PointingHandCursor
         onClicked: root.clicked()
     }
-
-    MouseArea {
-        anchors.fill: parent
-        hoverEnabled: true
-        acceptedButtons: Qt.NoButton
-    }
-
-    // a small label floats over the bar while the pointer rests
-    Rectangle {
-        id: tooltip
-
-        visible: root.tip !== "" && mouse.containsMouse
-        anchors.top: parent.bottom
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.topMargin: 8
-        width: tipText.width + 14
-        height: 22
-        radius: 11
-        color: Theme.islandSurface
-        border.width: 1
-        border.color: Theme.islandBorder
-        z: 50
-
-        Text {
-            id: tipText
-            anchors.centerIn: parent
-            text: root.tip
-            font.family: Theme.fontFamily
-            font.pixelSize: 11
-            color: Theme.textMuted
-        }
-    }
 }
