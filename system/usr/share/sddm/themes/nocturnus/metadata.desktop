@@ -1,0 +1,21 @@
+# ╭──────────────────────────────────────────────────────────────────────────╮
+# │                                                                          │
+# │   M E T A D A T A                                                        │
+# │   sddm theme metadata                                                    │
+# │                                                                          │
+# │   github.com/Phalynxi/Nocturnus                                      │
+# │                                                                          │
+# ╰──────────────────────────────────────────────────────────────────────────╯
+
+# No ConfigFile: the theme's values are fixed in components/Theme.qml.
+
+[SddmGreeterTheme]
+Name=nocturnus
+Description=The lock screen, before there is a desk behind it
+Author=Andreu Massanet
+License=GPL-3.0
+Type=sddm-theme
+Version=1.0
+Website=https://github.com/Phalynxi/Nocturnus
+QtVersion=6
+MainScript=Main.qml

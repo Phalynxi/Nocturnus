@@ -1,0 +1,20 @@
+#!/bin/sh
+# rec — toggle screen recording (wf-recorder) on the focused monitor.
+# start: begins ~/Videos/rec-<date>.mp4 / stop: ends it. notify-send feedback.
+dir="$HOME/Videos"
+mkdir -p "$dir"
+if pgrep -x wf-recorder >/dev/null; then
+  pkill -x wf-recorder
+  notify-send "Recording" "Saved to $dir"
+  echo stopped
+else
+  mon=$(hyprctl monitors -j 2>/dev/null | jq -r '.[] | select(.focused==true) | .name' | head -n 1)
+  file="$dir/rec-$(date '+%Y-%m-%d_%H-%M-%S').mp4"
+  if [ -n "$mon" ]; then
+    nohup wf-recorder -o "$mon" -f "$file" >/dev/null 2>&1 &
+  else
+    nohup wf-recorder -f "$file" >/dev/null 2>&1 &
+  fi
+  notify-send "Recording" "Saving to $file"
+  echo "started $file"
+fi

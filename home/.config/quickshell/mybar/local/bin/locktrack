@@ -1,0 +1,21 @@
+#!/bin/sh
+# locktrack — prints "artist - title" of the first non-wallpaper MPRIS player.
+# Used by hyprlock's now-playing label. Silent when nothing real plays.
+for p in $(playerctl --list-all 2>/dev/null); do
+  title=$(playerctl --player="$p" metadata --format '{{title}}' 2>/dev/null)
+  [ -z "$title" ] && continue
+  case "$title" in
+    *.mp4|*.mkv|*.webm|*.avi|*.mov|*.gif)
+      [ -f "$HOME/WALLPAPERS/$(basename "$title")" ] && continue
+      ;;
+  esac
+  artist=$(playerctl --player="$p" metadata --format '{{artist}}' 2>/dev/null)
+  if [ -n "$artist" ] && [ "$artist" != "$title" ]; then
+    out="$artist - $title"
+  else
+    out="$title"
+  fi
+  printf '%.60s\n' "$out"
+  exit 0
+done
+exit 0

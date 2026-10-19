@@ -1,0 +1,51 @@
+{
+    "autohide": "auto",
+    "barBlur": false,
+    "barStyle": "islands",
+    "dockBlur": false,
+    "gamingMode": true,
+    "glassLevel": 50,
+    "hidePlayerIdle": true,
+    "iconBase": 28,
+    "iconMax": 42,
+    "pinned": [
+        {
+            "exec": "firefox",
+            "icon": "firefox",
+            "id": "firefox"
+        },
+        {
+            "exec": "kitty",
+            "icon": "kitty",
+            "id": "kitty"
+        },
+        {
+            "exec": "dolphin",
+            "icon": "org.kde.dolphin",
+            "id": "dolphin"
+        },
+        {
+            "exec": "code",
+            "icon": "vscode",
+            "id": "code"
+        },
+        {
+            "exec": "vesktop",
+            "icon": "vesktop",
+            "id": "vesktop"
+        },
+        {
+            "exec": "spotify",
+            "icon": "spotify-client",
+            "id": "spotify"
+        },
+        {
+            "exec": "quickshell -p /home/octal/.config/quickshell/mybar/shell.qml ipc call launcher toggle",
+            "icon": "lucide:layout-grid",
+            "id": "launcher"
+        }
+    ],
+    "playerExpanded": false,
+    "rounding": 16,
+    "toolboxOpen": false
+}

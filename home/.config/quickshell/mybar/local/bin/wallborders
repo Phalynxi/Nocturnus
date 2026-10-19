@@ -1,0 +1,104 @@
+#!/usr/bin/env python3
+"""wallborders <image-or-video> — set Hyprland active-border gradient from wallpaper colors.
+
+Extracts two vivid colors (PIL median-cut + saturation-weighted pick), applies
+live via `hyprctl keyword` and caches to ~/.cache/mybar/border.conf
+(consumed by hyprland.lua at startup).
+"""
+import colorsys
+import os
+import subprocess
+import sys
+import tempfile
+
+CACHE = os.path.expanduser("~/.cache/mybar/border.conf")
+FALLBACK = ("rgba(33ccffee)", "rgba(00ff99ee)")
+VIDEO_EXTS = {".mp4", ".mkv", ".webm", ".avi", ".mov", ".gif"}
+
+
+def frame_of(path):
+    ext = os.path.splitext(path)[1].lower()
+    if ext not in VIDEO_EXTS:
+        return path
+    tmp = tempfile.mktemp(suffix=".jpg")
+    r = subprocess.run(
+        ["ffmpeg", "-y", "-v", "error", "-i", path,
+         "-vframes", "1", "-s", "320x180", tmp],
+        capture_output=True)
+    if r.returncode == 0 and os.path.exists(tmp):
+        return tmp
+    return None
+
+
+def pick_colors(path):
+    from PIL import Image
+    img = Image.open(path).convert("RGB")
+    img.thumbnail((192, 192))
+    q = img.quantize(colors=12, method=2)  # MEDIANCUT
+    counts = q.getcolors(maxcolors=1 << 20)
+    if not counts:
+        return None
+    pal = q.getpalette()
+    scored = []
+    for n, idx in counts:
+        r, g, b = pal[idx * 3:idx * 3 + 3]
+        h, s, v = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
+        if v < 0.12:  # near-black adds nothing to a glow border
+            continue
+        score = n * (0.3 + 0.7 * s) * (0.4 + 0.6 * min(1.0, v * 1.2))
+        scored.append((score, h, s, v, (r, g, b)))
+    if not scored:
+        return None
+    scored.sort(reverse=True)
+    c1 = scored[0]
+    c2 = None
+    for cand in scored[1:]:
+        dh = abs(cand[1] - c1[1])
+        dh = min(dh, 1.0 - dh)
+        if dh > 0.07:  # distinct hue (~25deg)
+            c2 = cand
+            break
+    if c2 is None and len(scored) > 1:
+        # monochrome image: contrast on brightness instead of hue
+        c2 = max(scored[1:], key=lambda c: abs(c[3] - c1[3]))
+    cols = [c1] if c2 is None else [c1, c2]
+    out = []
+    for _, h, s, v, (r, g, b) in cols:
+        # borders should glow: floor saturation, lift dark picks
+        s = max(s, 0.6) if s < 0.35 else s
+        v = 0.78 if v < 0.45 else v
+        r, g, b = [int(x * 255) for x in colorsys.hsv_to_rgb(h, min(s, 1.0), min(v, 1.0))]
+        out.append("rgba(%02x%02x%02xee)" % (r, g, b))
+    if len(out) == 1:
+        out.append(out[0])
+    return out[0], out[1]
+
+
+def main():
+    if len(sys.argv) < 2:
+        print("usage: wallborders <image-or-video>", file=sys.stderr)
+        return 1
+    src = sys.argv[1]
+    if not os.path.exists(src):
+        print("not found: %s" % src, file=sys.stderr)
+        return 1
+    img = frame_of(src)
+    try:
+        cols = pick_colors(img) if img else None
+    finally:
+        if img and img != src and os.path.exists(img):
+            os.unlink(img)
+    a, b = cols or FALLBACK
+    subprocess.run(["hyprctl", "eval",
+                    'hl.config({ general = { col = { active_border = { colors = {"%s", "%s"}, angle = 45 } } } })' % (a, b)],
+                   capture_output=True)
+    os.makedirs(os.path.dirname(CACHE), exist_ok=True)
+    with open(CACHE, "w") as f:
+        f.write("%s\n%s\n" % (a, b))
+    subprocess.run(["notify-send", "Borders", "Matched to wallpaper"], capture_output=True)
+    print(a, b)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

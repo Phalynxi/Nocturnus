@@ -1,0 +1,47 @@
+/* ── IMPASTO GLASS ───────────────────────────────────────────────────────────
+   Translucent dark surfaces so the wallpaper (faded in by the
+   spotify-translucent window rule in hypr/modules/windowrules.lua) shows
+   through, matching the bar and the island. Only color.ini is regenerated
+   on a palette switch; this file survives. */
+
+:root {
+    --glass-ground: rgba(10, 10, 16, 0.55);
+    --glass-raised: rgba(24, 24, 34, 0.68);
+    --glass-hover: rgba(40, 40, 54, 0.78);
+    --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+/* the app's own ground: sidebar, main view, top bar and the player bar */
+body,
+.Root__main-view,
+.main-view-container,
+.main-view-container__child,
+.main-topBar-background,
+.main-topBar-topBarContent,
+.main-player-bar,
+.main-player-bar-wrapper,
+.Root__nav-bar,
+.nav-bar {
+    background-color: var(--glass-ground) !important;
+    background-image: none !important;
+}
+
+/* cards, list rows, menus and the now-playing bar sit a shade above */
+.main-card-card,
+.main-cardImage-imageWrapper,
+.main-trackList-trackListRow,
+.main-trackList-trackListRowGrid,
+.main-contextMenu-menu,
+.main-contextMenu-menuItemButton,
+.main-popper-container,
+.main-nowPlayingBar-nowPlayingBar,
+.main-nowPlayingBar-container {
+    background-color: var(--glass-raised) !important;
+    border: 1px solid var(--glass-border) !important;
+}
+
+/* hover states lift a little more */
+.main-trackList-trackListRow:hover,
+.main-contextMenu-menuItemButton:hover {
+    background-color: var(--glass-hover) !important;
+}

@@ -1,0 +1,35 @@
+#!/bin/sh
+# lockart — daemon: keeps ~/.cache/mybar/lock-art.jpg synced to the current
+# non-wallpaper player's album art (for hyprlock). Keeps last art when idle.
+out="$HOME/.cache/mybar/lock-art.jpg"
+mkdir -p "$(dirname "$out")"
+last=""
+while true; do
+  url=""
+  for p in $(playerctl --list-all 2>/dev/null); do
+    meta=$(playerctl --player="$p" metadata --format '{{title}}|||{{mpris:artUrl}}' 2>/dev/null)
+    title=${meta%%|||*}
+    [ -z "$title" ] && continue
+    case "$title" in
+      *.mp4|*.mkv|*.webm|*.avi|*.mov|*.gif)
+        [ -f "$HOME/WALLPAPERS/$(basename "$title")" ] && continue
+        ;;
+    esac
+    url=${meta#*|||*}
+    [ -n "$url" ] && [ "$url" != "$title" ] && break
+    url=""
+  done
+  if [ -n "$url" ] && [ "$url" != "$last" ]; then
+    tmp="$out.tmp"
+    case "$url" in
+      file://*)
+        cp "${url#file://}" "$tmp" 2>/dev/null && mv "$tmp" "$out" && last="$url"
+        ;;
+      http*|https*)
+        curl -sL --max-time 10 "$url" -o "$tmp" 2>/dev/null \
+          && [ -s "$tmp" ] && mv "$tmp" "$out" && last="$url"
+        ;;
+    esac
+  fi
+  sleep 3
+done

@@ -1,0 +1,22 @@
+#!/bin/sh
+# wp img <file> | wp vid <file> — single wallpaper backend switcher.
+# images -> awww (kills video) / videos -> mpvpaper (covers awww, no daemon juggling)
+case "$1" in
+  img)
+    shift
+    pkill -x mpvpaper 2>/dev/null
+    pgrep -x awww-daemon >/dev/null || (awww-daemon >/dev/null 2>&1 & sleep 1)
+    awww img "$1" && echo "wallpaper: $1" && ("$HOME/.local/bin/wallborders" "$1" >/dev/null 2>&1 &)
+    (convert "$1" -resize 1366x768^ -gravity center -extent 1366x768 "$HOME/.cache/mybar/lock-bg.jpg" 2>/dev/null &)
+    ;;
+  vid)
+    shift
+    pkill -x mpvpaper 2>/dev/null
+    sleep 0.3
+    nohup mpvpaper -o "no-audio loop hwdec=auto" HDMI-A-1 "$1" >/dev/null 2>&1 &
+    echo "video wallpaper: $1"
+    ("$HOME/.local/bin/wallborders" "$1" >/dev/null 2>&1 &)
+    (ffmpeg -y -v error -i "$1" -vframes 1 -s 1366x768 "$HOME/.cache/mybar/lock-bg.jpg" 2>/dev/null &)
+    ;;
+  *) echo "usage: wp [img|vid] <file>" >&2; exit 1 ;;
+esac

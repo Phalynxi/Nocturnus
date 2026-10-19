@@ -1,0 +1,62 @@
+{
+    "blur": false,
+    "editMode": true,
+    "glass": false,
+    "visible": true,
+    "widgets": [
+        {
+            "payload": "",
+            "scale": 1,
+            "type": "clock",
+            "uid": "clock-0",
+            "w": 260,
+            "x": 24,
+            "y": 72
+        },
+        {
+            "payload": "",
+            "scale": 1,
+            "type": "sys",
+            "uid": "sys-0",
+            "w": 300,
+            "x": 24,
+            "y": 300
+        },
+        {
+            "payload": "",
+            "scale": 1,
+            "type": "notes",
+            "uid": "notes-0",
+            "w": 300,
+            "x": 24,
+            "y": 640
+        },
+        {
+            "payload": "",
+            "scale": 1,
+            "type": "calendar",
+            "uid": "calendar-0",
+            "w": 264,
+            "x": 1632,
+            "y": 72
+        },
+        {
+            "payload": "",
+            "scale": 1,
+            "type": "weather",
+            "uid": "weather-0",
+            "w": 264,
+            "x": 1632,
+            "y": 460
+        },
+        {
+            "payload": "",
+            "scale": 1,
+            "type": "launcher",
+            "uid": "launcher-0",
+            "w": 314,
+            "x": 1582,
+            "y": 860
+        }
+    ]
+}

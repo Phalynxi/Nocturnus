@@ -1,0 +1,30 @@
+#!/bin/sh
+# usage: shot [full|region|window]
+# saves to ~/Pictures/Screenshots + copies PNG to clipboard
+mode="${1:-region}"
+dir="$HOME/Pictures/Screenshots"
+mkdir -p "$dir"
+file="$dir/$(date '+%Y-%m-%d_%H-%M-%S').png"
+
+case "$mode" in
+  full)
+    grim "$file" || exit 1
+    ;;
+  region)
+    geo=$(slurp 2>/dev/null) || exit 0
+    [ -z "$geo" ] && exit 0
+    grim -g "$geo" "$file" || exit 1
+    ;;
+  window)
+    geo=$(hyprctl activewindow -j | jq -r '"\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"') || exit 1
+    grim -g "$geo" "$file" || exit 1
+    ;;
+  *)
+    echo "usage: shot [full|region|window]" >&2
+    exit 1
+    ;;
+esac
+
+wl-copy --type image/png < "$file"
+notify-send "Screenshot" "Saved + copied to clipboard\n$file"
+echo "$file"

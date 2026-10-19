@@ -1,0 +1,14 @@
+#!/bin/sh
+# one-shot system snapshot for the bar/popup. Output:
+# CPU=<pct> MEM=<pct> TEMP=<c>
+# TOP=<comm>|<cpu>,...
+r1=$(awk '/^cpu /{print $2+$3+$4+$5+$6+$7+$8, $5+$6}' /proc/stat)
+sleep 0.5
+r2=$(awk '/^cpu /{print $2+$3+$4+$5+$6+$7+$8, $5+$6}' /proc/stat)
+cpu=$(echo "$r1 $r2" | awk '{d=$3-$1; i=$4-$2; if (d>0) printf "%d", (1-i/d)*100; else print 0}')
+mem=$(awk '/MemTotal/{t=$2} /MemAvailable/{a=$2} END{if (t>0) printf "%d", (t-a)/t*100; else print 0}' /proc/meminfo)
+temp=$(cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null | sort -rn | head -n 1 | awk '{printf "%d", $1/1000}')
+top=$(ps -eo comm,%cpu --sort=-%cpu 2>/dev/null | head -n 6 | tail -n 5 | awk '{cpu=$NF; $NF=""; gsub(/^ +| +$/, ""); printf "%s|%s,", $0, cpu}' | sed 's/,$//')
+echo "CPU=$cpu MEM=$mem TEMP=${temp:-0}"
+echo "TOP=$top"
+if nmcli -t -f TYPE,STATE dev 2>/dev/null | grep -q ':connected'; then echo "NET=up"; else echo "NET=down"; fi

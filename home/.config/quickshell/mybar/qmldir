@@ -1,0 +1,29 @@
+module mybar
+
+singleton Theme 1.0 Theme.qml
+
+AudioPanel 1.0 AudioPanel.qml
+CalendarPanel 1.0 CalendarPanel.qml
+ControlCenter 1.0 ControlCenter.qml
+Dashboard 1.0 Dashboard.qml
+DisplayPanel 1.0 DisplayPanel.qml
+DockIcon 1.0 DockIcon.qml
+DockPanel 1.0 DockPanel.qml
+DockSettings 1.0 DockSettings.qml
+Launcher 1.0 Launcher.qml
+LockScreen 1.0 LockScreen.qml
+Lucide 1.0 Lucide.qml
+MediaPanel 1.0 MediaPanel.qml
+MiniSlider 1.0 MiniSlider.qml
+MixerPanel 1.0 MixerPanel.qml
+MixerRow 1.0 MixerRow.qml
+Notifications 1.0 Notifications.qml
+OverviewPanel 1.0 OverviewPanel.qml
+Popups 1.0 Popups.qml
+PowerPanel 1.0 PowerPanel.qml
+ShellFont 1.0 ShellFont.qml
+SysPanel 1.0 SysPanel.qml
+TrayMenu 1.0 TrayMenu.qml
+WallpaperMenu 1.0 WallpaperMenu.qml
+WidgetStore 1.0 WidgetStore.qml
+Widgets 1.0 Widgets.qml
