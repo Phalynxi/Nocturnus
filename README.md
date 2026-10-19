@@ -12,8 +12,8 @@ as, under the GPL-3.0 (see [LICENSE](LICENSE)).
 - **Compositor:** Arch Linux + Hyprland (Lua config in `home/.config/hypr/`)
 - **Shell:** Quickshell — the island, the bar, the dock, notes, games
   (`home/.config/quickshell/`)
-- **Palette:** every wall painting impastes everything — pick a wallpaper and
-  the terminal, prompt, monitor, widgets, even Spotify follow it
+- **Palette:** pick a wallpaper and everything follows it — the terminal, the
+  prompt, the monitor, the widgets, even Spotify
 - **Everything else, in a table:**
 
 | | | |
@@ -22,13 +22,14 @@ as, under the GPL-3.0 (see [LICENSE](LICENSE)).
 | 🐚 | Desktop shell | Quickshell |
 | 🖼️ | Wallpaper daemon | awww |
 | 🖥️ | Terminal | kitty |
-| ⌨️ | Interactive shell | zsh · oh-my-zsh |
+| ⌨️ | Interactive shell | fish |
 | ❯ | Prompt | starship |
 | 🎨 | Greeting | fastfetch |
 | 📊 | System monitor | btop |
 | 🎵 | Audio visualiser | cava |
-| 📁 | File manager | yazi · Thunar |
-| ✏️ | Editor | neovim · VSCodium |
+| 🌐 | Browser | Thorium |
+| 📁 | File manager | Nautilus |
+| ✏️ | Editor | VSCodium |
 | 💬 | Chat | Vesktop |
 | 🎧 | Player | Spotify · spicetify |
 | 🔑 | Login screen | SDDM |

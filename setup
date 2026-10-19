@@ -1053,9 +1053,9 @@ extras() {
 # somebody chose stays chosen and is not split with ours.
 DEFAULT_APPS=(
     'imv.desktop image/jpeg image/png image/gif image/webp image/svg+xml'
-    'nvim.desktop text/plain application/json'
-    'thunar.desktop inode/directory'
-    'zen.desktop text/html application/pdf x-scheme-handler/http x-scheme-handler/https'
+    'codium.desktop text/plain application/json'
+    'org.gnome.Nautilus.desktop inode/directory'
+    'thorium-browser-avx2.desktop text/html application/pdf x-scheme-handler/http x-scheme-handler/https'
 )
 
 # Whether mimeapps.list names a default for a type. `xdg-mime query` cannot

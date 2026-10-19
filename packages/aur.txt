@@ -38,7 +38,7 @@ lavat                        # the lava function
 # ── THEMED APPLICATIONS ─────────────────────────────────────────────────────
 
 vscodium-bin                 # extensions and settings · ./setup vscodium
-zen-browser-bin
+thorium-browser-avx2-bin
 vesktop-bin
 spotify
 spicetify-cli                # applies the palette to Spotify · ./setup spotify

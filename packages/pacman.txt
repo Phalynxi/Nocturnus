@@ -50,6 +50,7 @@ noto-fonts-cjk               # Chinese, Japanese and Korean, and their punctuati
 # ── TERMINAL ────────────────────────────────────────────────────────────────
 
 kitty
+fish                         # the interactive shell: kitty opens it, starship paints its prompt
 starship
 less                         # kitty's scrollback pager, which base does not bring
 
