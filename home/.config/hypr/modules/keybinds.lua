@@ -325,7 +325,7 @@ bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/n
 -- · wakes it (key/mouse wake is off). The dispatcher toggles; it ignores
 -- · a state argument.
 bind(mainMod .. " + SHIFT + D", hl.dsp.dpms(), { locked = true, description = "Utilities · Turn the screen off or back on" })
-bind(mainMod .. " + CTRL + R",  hl.dsp.exec_cmd("pkill -x quickshell; pkill -x qs; sleep 0.5; qs -d"), { description = "Utilities · Restart the shell" })
+bind(mainMod .. " + CTRL + R",  hl.dsp.exec_cmd("pkill -x quickshell; pkill -x qs; sleep 0.5; qs -p /home/octal/.config/quickshell/nocturnus.qml -d"), { description = "Utilities · Restart the shell" })
 
 
 -- ── SHELL ───────────────────────────────────────────────────────────────────
