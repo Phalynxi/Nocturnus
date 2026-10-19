@@ -2346,15 +2346,21 @@ def refresh_spotify():
         sys.stderr.write("spicetify refresh failed: "
                          f"{(result.stdout + result.stderr).strip()[-300:]}\n")
     else:
-        # colors.css only takes effect when the client restarts, so relaunch it;
-        # otherwise the new wallpaper palette never reaches Spotify.
+        # colours.css only takes effect at the client's next start, so a
+        # client that was up is relaunched after the kill. A client that was
+        # down stays down: a shell reload restores the palette, and that must
+        # not start a resting Spotify.
         spotify_bin = os.path.join(spotify, "spotify")
+        was_running = subprocess.run(
+            ["pgrep", "-f", spotify_bin], capture_output=True, text=True
+        ).returncode == 0
+        if was_running:
+            try:
+                subprocess.run(["pkill", "-f", spotify_bin], timeout=10)
+            except (OSError, subprocess.SubprocessError):
+                pass
         try:
-            subprocess.run(["pkill", "-f", spotify_bin], timeout=10)
-        except (OSError, subprocess.SubprocessError):
-            pass
-        try:
-            if os.path.isfile(spotify_bin):
+            if was_running and os.path.isfile(spotify_bin):
                 subprocess.Popen([spotify_bin], stdout=subprocess.DEVNULL,
                                  stderr=subprocess.DEVNULL,
                                  start_new_session=True)
