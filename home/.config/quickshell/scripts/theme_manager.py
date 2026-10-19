@@ -1191,6 +1191,8 @@ def build_yazi_tmtheme(colors):
 
 def write_yazi_flavor(colors):
     """Write yazi's flavour directory: flavor.toml and tmtheme.xml."""
+    if not shutil.which("yazi"):
+        return
     write_program_theme("yazi", YAZI_DIR, YAZI_FLAVOR_FILE, build_yazi_flavor, colors)
     write_program_theme("yazi", YAZI_DIR, YAZI_TMTHEME_FILE, build_yazi_tmtheme, colors)
 
@@ -2719,16 +2721,16 @@ def push_nvim_colorscheme(colors):
     <C-\\><C-N> first and would leave insert mode; the expression does not
     change the mode.
     """
+    nvim = shutil.which("nvim")
+    if not nvim:
+        return
+
     try:
         os.makedirs(os.path.dirname(NVIM_COLORS_FILE), exist_ok=True)
         with open(NVIM_COLORS_FILE, "w", encoding="utf-8") as handle:
             handle.write(build_nvim_colorscheme(colors))
     except OSError as error:
         sys.stderr.write(f"Cannot write neovim's colourscheme: {error}\n")
-        return
-
-    nvim = shutil.which("nvim")
-    if not nvim:
         return
 
     for socket_path in sorted(glob.glob(NVIM_SOCKETS)):
@@ -3610,9 +3612,6 @@ THUNAR_ACTIONS = (
     ("nocturnus-terminal", "utilities-terminal", "Open Terminal Here",
      "Open kitty in this folder",
      "kitty --working-directory %f", ("directories",)),
-    ("nocturnus-yazi", "folder-open", "Open yazi Here",
-     "Open this folder in yazi",
-     "kitty --working-directory %f yazi", ("directories",)),
     ("nocturnus-editor", "accessories-text-editor", "Open in the Editor",
      "Open in VSCodium",
      "codium %F", ("directories", "text-files", "other-files")),
