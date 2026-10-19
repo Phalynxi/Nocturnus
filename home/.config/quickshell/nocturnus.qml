@@ -18,6 +18,7 @@ import Quickshell.Io
 import Quickshell.Wayland
 
 import "noct"
+import "lock"
 import "services"
 
 // The new shell: a bar, a dock, a launcher and a wallpaper switcher, all
@@ -60,6 +61,10 @@ ShellRoot {
     Wallpapers {
         id: wallGrid
     }
+
+    // The lock: a full surface over the desk with the island look, driven by
+    // IdleService for idle, SleeveService for sleep.
+    LockScreen {}
 
     // Global shortcuts: keybinds.lua binds a key to the name, and the action
     // lives here, so a new panel needs no compositor config.
