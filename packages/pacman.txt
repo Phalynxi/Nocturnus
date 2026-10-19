@@ -20,7 +20,7 @@ quickshell                   # the shell: the bar, the island, the lock, notific
 awww                         # the wallpaper
 imagemagick                  # the palette board
 python                       # every backend in scripts/
-git                          # setup's own clones, ./setup cursors, lazy.nvim
+git                          # setup's own clones, ./setup cursors
 grim                         # the capture's photograph, and the lock screen's
 dbus                         # dbus-monitor, which hears logind about to sleep
 wl-clipboard                 # copying, and the clipboard's history
@@ -33,7 +33,7 @@ playerctl                    # the play, pause, next and previous keys
 xdg-desktop-portal-hyprland  # screen sharing
 xdg-desktop-portal-gtk       # every Open dialog
 xdg-user-dirs                # the folders a capture lands in
-xdg-utils                    # xdg-open, which yazi hands the rest to
+xdg-utils                    # xdg-open, for what is not in the desk
 qt6ct                        # the platform theme env.lua names
 papirus-icon-theme           # what the nocturnus icon theme inherits
 inter-font                   # the shell's type, and the greeter's
@@ -86,8 +86,8 @@ fnm                          # the same
 fastfetch                    # the greeting, on `fa`
 btop                         # themed by the palette push
 cava                         # the same, and the bar's visualiser
-imv                          # what yazi and the photo widget hand a picture to
-mpv                          # what yazi hands a video or a song to
+imv                          # the photo widget's picture viewer
+mpv                          # the player a video or a song is handed to
 ffmpeg                       # an animated wallpaper's still, for its palette
 asciiquarium
 
@@ -106,7 +106,7 @@ qt6-declarative              # qmlls6 · quickshell brings it anyway
 # ── FILE MANAGER ────────────────────────────────────────────────────────────
 
 gvfs                         # the trash, and mounting
-xfconf                       # xfconf-query, which ./setup thunar writes with
+xfconf                       # xfconf-query, which the setup writes through
 
 
 # ── QT ──────────────────────────────────────────────────────────────────────
