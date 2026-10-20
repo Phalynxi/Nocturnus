@@ -23,8 +23,10 @@ CACHE = Path.home() / ".cache" / "nocturnus-hive"
 
 
 def make(path: str) -> str | None:
-    thumb = CACHE / (hashlib.sha1(path.encode()).hexdigest() + ".jpg")
-    if not thumb.exists():
+    key = hashlib.sha1(path.encode()).hexdigest()
+    thumb = CACHE / (key + ".jpg")
+    forgiven = CACHE / (key + ".fail")
+    if not thumb.exists() and not forgiven.exists():
         scratch = thumb.with_suffix(".part.jpg")
         cut = subprocess.run(
             ["magick", path, "-thumbnail", f"{SIZE}x{SIZE}^",
@@ -33,8 +35,12 @@ def make(path: str) -> str | None:
             check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         if cut.returncode == 0 and scratch.exists():
             scratch.replace(thumb)
-        elif scratch.exists():
-            scratch.unlink()
+        else:
+            # Magick could not read it; forgive it once and never waste a
+            # worker on it again. The cell shows the original instead.
+            if scratch.exists():
+                scratch.unlink()
+            forgiven.touch()
     return str(thumb) if thumb.exists() else None
 
 

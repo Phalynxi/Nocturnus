@@ -201,17 +201,17 @@ PanelWindow {
             NumberAnimation {
                 target: comb
                 property: "transitX"
-                to: comb.drift * -140
-                duration: Theme.durationFast * 3
+                to: comb.drift * -90
+                duration: 110
                 easing.type: Easing.OutQuad
             }
             ScriptAction { script: comb.page += comb.drift }
             NumberAnimation {
                 target: comb
                 property: "transitX"
-                from: comb.drift * 140
+                from: comb.drift * 90
                 to: 0
-                duration: Theme.durationMedium + 60
+                duration: 150
                 easing.type: Easing.OutCubic
             }
         }
@@ -254,6 +254,43 @@ PanelWindow {
 
                 Behavior on scale { NumberAnimation { duration: Theme.durationFast; easing.type: Easing.OutCubic } }
 
+                // The body carries the entrance, so the wave never fights
+                // the hover: the wrapper lifts, the wax falls into place.
+                Item {
+                    id: body
+
+                    anchors.fill: parent
+
+                    Component.onCompleted: wave.restart()
+
+                    // Wave + fade: each cell waits on its diagonal from the
+                    // comb's head, then fades up with a whisper of scale.
+                    // The thumbs for pages near this one are decoded ahead,
+                    // so the wave never stutters on a disk read.
+                    SequentialAnimation {
+                        id: wave
+
+                        running: false
+                        PauseAnimation { duration: cellRoot.row * 35 + cellRoot.col * 18 }
+                        ParallelAnimation {
+                            NumberAnimation {
+                                target: body
+                                property: "opacity"
+                                from: 0
+                                to: 1
+                                duration: 160
+                            }
+                            NumberAnimation {
+                                target: body
+                                property: "scale"
+                                from: 0.86
+                                to: 1
+                                duration: 220
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+                    }
+
                 // The wax: the picture through the transition preview's own
                 // route, texture into a ShapePath, six edges.
                 ShaderEffectSource {
@@ -270,7 +307,11 @@ PanelWindow {
 
                     anchors.fill: parent
                     fillMode: Image.PreserveAspectCrop
-                    asynchronous: true
+                    // A cached thumb is small enough to decode on the spot:
+                    // the pixel exists when the wave reaches its slot. An
+                    // original the helper has not cut yet falls back to the
+                    // asynchronous road.
+                    asynchronous: root.thumbs[cellRoot.cellData.path] === undefined
                     // Thumbs read from the pre-cut cache; a wallpaper the
                     // helper has not reached yet shows the original.
                     source: {
@@ -331,7 +372,41 @@ PanelWindow {
                     onEntered: comb.hovered = cellRoot.index
                     // The wheel drifts the stack from anywhere on the hive.
                     onWheel: wheel => comb.turn(wheel.angleDelta.y < 0 ? 1 : -1)
+                    }
                 }
+            }
+        }
+    }
+
+    // The stack is rendered ahead: the pages a turn could land on hold
+    // their thumbs decoded in the image cache, in the exact size the cells
+    // ask for, so a page-turn's wave never waits on a disk read midflight.
+    Item {
+        visible: false
+
+        Repeater {
+            model: {
+                const near = []
+                const reach = [-1, 1, -2, 2]
+                for (const step of reach) {
+                    const at = comb.page + step
+                    if (at >= 0 && at < comb.pages)
+                        near = near.concat(comb.cells.slice(
+                            at * comb.perPage, (at + 1) * comb.perPage)
+                            .map(c => c.path))
+                }
+                return near
+            }
+
+            Image {
+                asynchronous: true
+                source: {
+                    const small = root.thumbs[modelData]
+                    return small !== undefined
+                        ? "file://" + small : encodeURI("file://" + modelData)
+                }
+                sourceSize.width: Math.round((comb.side + comb.pad * 2) * 2)
+                sourceSize.height: Math.round((comb.radius * 2 + comb.pad * 2) * 2)
             }
         }
     }
