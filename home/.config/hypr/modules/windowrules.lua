@@ -79,7 +79,7 @@ hl.window_rule({
     name  = "vesktop-translucent",
     match = { class = "^(vesktop|Vesktop)$" },
 
-    opacity = "0.88 0.88",
+    opacity = "0.99 0.99",
 })
 
 
