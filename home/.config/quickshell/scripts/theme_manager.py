@@ -827,16 +827,6 @@ def write_opencode_theme(colors):
     green = colors["green"]
     yellow = colors["yellow"]
 
-    def x8(color, alpha):
-        """A colour with an alpha pair, as an [r, g, b, a] tuple.
-
-        Hex8 is the unstable format here — this build parses it into an
-        opaque fallback grey — while the schema's tuple form carries the
-        alpha through untouched.
-        """
-        red, green, blue = hex_to_rgb(color) if isinstance(color, str) else color
-        return [red, green, blue, round(alpha, 2)]
-
     def lift(step):
         """The background lifted `step` twelfths towards white, the same
         ramp the system theme walks over the terminal's own background."""
@@ -846,6 +836,12 @@ def write_opencode_theme(colors):
         """A hint of a palette colour over `step` of the background."""
         return mix(lift(step), color, 0.55)
 
+    # Containers are `none` — the terminal's default, i.e. no paint — the
+    # only translucency this build's loader knows. Hex8 parsed into an
+    # opaque fallback grey, and the schema's colour tuples are not in the
+    # V1 grammar at all; its loader wants hex, an index, a reference or
+    # `none`, anything else is a failed theme.
+    NO_PAINT = "none"
     theme = {
         "primary": accent,
         "secondary": blue,
@@ -857,12 +853,10 @@ def write_opencode_theme(colors):
         "text": text,
         "textMuted": text_muted,
         "selectedListItemText": background,
-        # The TUI's ground stays fully transparent, as the system theme has
-        # it; what sat opaque over it are now mists.
-        "background": "transparent",
-        "backgroundPanel": x8(lift(2), 0.55),
-        "backgroundElement": x8(lift(3), 0.55),
-        "backgroundMenu": x8(lift(3), 0.55),
+        "background": "none",
+        "backgroundPanel": NO_PAINT,
+        "backgroundElement": NO_PAINT,
+        "backgroundMenu": NO_PAINT,
         "border": lift(7),
         "borderActive": lift(8),
         "borderSubtle": lift(6),
@@ -872,11 +866,11 @@ def write_opencode_theme(colors):
         "diffHunkHeader": lift(7),
         "diffHighlightAdded": green,
         "diffHighlightRemoved": red,
-        "diffAddedBg": x8(as_if(green, 2), 0.5),
-        "diffRemovedBg": x8(as_if(red, 2), 0.5),
-        "diffContextBg": x8(lift(2), 0.5),
-        "diffAddedLineNumberBg": x8(as_if(green, 2), 0.45),
-        "diffRemovedLineNumberBg": x8(as_if(red, 2), 0.45),
+        "diffAddedBg": NO_PAINT,
+        "diffRemovedBg": NO_PAINT,
+        "diffContextBg": NO_PAINT,
+        "diffAddedLineNumberBg": NO_PAINT,
+        "diffRemovedLineNumberBg": NO_PAINT,
         "diffLineNumber": text_muted,
         "markdownText": text,
         "markdownHeading": accent,
