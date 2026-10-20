@@ -49,9 +49,13 @@ PanelWindow {
         if (root.thumbsStarted || comb.cells.length === 0)
             return
         root.thumbsStarted = true
-        const list = comb.cells.map(c => c.path)
-            .concat(comb.cells
-                .filter(c => c.motion && c.poster !== "").map(c => c.poster))
+        // The wax is asked for by what it displays: a cut per picture, a
+        // blurred cut per motion cell — with the sharp poster beside it, so
+        // a hover resolves the blur. `b` marks the blur.
+        const list = comb.cells.map(c => ({
+            p: c.motion && c.poster !== "" ? c.poster : c.path,
+            b: c.motion && c.poster !== ""
+        }))
         thumbsProcess.command = [
             "python3", Quickshell.shellPath("scripts/hive_thumbs.py"),
             JSON.stringify(list)
@@ -304,14 +308,23 @@ PanelWindow {
                     // original the helper has not cut yet falls back to the
                     // asynchronous road.
                     asynchronous: root.thumbs[cellRoot.cellData.path] === undefined
-                    // Thumbs read from the pre-cut cache; a wallpaper the
-                    // helper has not reached yet shows the original.
+                    // Thumbs read from the pre-cut cache; the wax for a
+                    // motion cell is the blurred cut until a hover resolves
+                    // it sharp. A wallpaper the helper has not reached yet
+                    // shows the original.
                     source: {
-                        const small = root.thumbs[cellRoot.cellData.path]
-                        const big = encodeURI("file://" + (cellRoot.cellData.motion
-                            ? (cellRoot.cellData.poster !== "" ? cellRoot.cellData.poster : "")
-                            : cellRoot.cellData.path))
-                        return small !== undefined ? "file://" + small : big
+                        const shown = cellRoot.cellData.motion
+                            && cellRoot.cellData.poster !== ""
+                            ? cellRoot.cellData.poster : cellRoot.cellData.path
+                        const base = root.thumbs[shown]
+                        const sharp = cellRoot.cellData.motion
+                            && cellRoot.cellData.poster !== ""
+                            ? root.thumbs["#:" + shown] : undefined
+                        if (base === undefined)
+                            return encodeURI("file://" + shown)
+                        return cellRoot.hovered && sharp !== undefined
+                            ? "file://" + sharp
+                            : "file://" + base
                     }
                     sourceSize.width: Math.round(parent.width * 2)
                     sourceSize.height: Math.round(parent.height * 2)
@@ -353,6 +366,27 @@ PanelWindow {
                     color: Theme.accentText
                 }
 
+                // What plays instead of sits: the cell is blurred at rest,
+                // and a small sigil marks it — a play wedge in wax-white.
+                Shape {
+                    visible: cellRoot.cellData.motion
+                    anchors.centerIn: parent
+                    width: 46
+                    height: 46
+
+                    ShapePath {
+                        fillColor: "#E6F4F7FB"
+
+                        PathPolyline {
+                            path: [
+                                Qt.point(12, 7),
+                                Qt.point(40, 23),
+                                Qt.point(12, 39)
+                            ]
+                        }
+                    }
+                }
+
                 MouseArea {
                     anchors.fill: parent
                     hoverEnabled: true
@@ -360,6 +394,8 @@ PanelWindow {
                     onClicked: {
                         comb.hovered = cellRoot.index
                         WallpaperService.apply(cellRoot.cellData.path)
+                        // Choosing is doing: the hive closes itself.
+                        root.closeDown()
                     }
                     onEntered: comb.hovered = cellRoot.index
                     // The wheel drifts the stack from anywhere on the hive.
