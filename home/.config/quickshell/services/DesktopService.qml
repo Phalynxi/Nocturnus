@@ -47,7 +47,8 @@ Singleton {
         { id: "2x2", cols: 2, rows: 2, label: "Small" },
         { id: "4x2", cols: 4, rows: 2, label: "Wide" },
         { id: "4x4", cols: 4, rows: 4, label: "Large" },
-        { id: "8x2", cols: 8, rows: 2, label: "Band" }
+        { id: "8x2", cols: 8, rows: 2, label: "Band" },
+        { id: "10x2", cols: 10, rows: 2, label: "Broad" }
     ]
 
     function family(id: string): var {
@@ -111,7 +112,7 @@ Singleton {
             games: ["2x2", "4x2"],                  calendar: ["2x2", "4x2", "4x4"],
             notes: ["2x2", "4x2", "4x4", "8x2"],    tasks: ["2x2", "4x2", "4x4"],
             clock: ["2x2", "4x2", "4x4", "8x2"],    photo: ["2x2", "4x2", "4x4", "8x2"],
-            spectrum: ["4x2", "8x2", "4x4"]
+            spectrum: ["4x2", "8x2", "10x2", "4x4"]
         },
         modern: {
             media: ["2x2", "4x2", "4x4"],           timer: ["2x2", "4x2"],
@@ -125,7 +126,7 @@ Singleton {
             games: ["2x2", "4x2"],                  calendar: ["2x2", "4x2", "4x4"],
             notes: ["2x2", "4x2", "4x4", "8x2"],    tasks: ["2x2", "4x2", "4x4"],
             clock: ["2x2", "4x2", "8x2"],           photo: ["2x2", "4x2", "4x4", "8x2"],
-            spectrum: ["4x2", "8x2", "4x4"]
+            spectrum: ["4x2", "8x2", "10x2", "4x4"]
         },
         analogue: {
             media: ["2x2", "4x2", "4x4"],           timer: ["2x2", "4x2"],
@@ -139,7 +140,7 @@ Singleton {
             games: ["2x2", "4x2"],                  calendar: ["2x2", "4x2", "4x4"],
             notes: ["2x2", "4x2", "4x4", "8x2"],    tasks: ["2x2", "4x2", "4x4"],
             clock: ["2x2", "4x2", "4x4", "8x2"],    photo: ["2x2", "4x2", "4x4", "8x2"],
-            spectrum: ["4x2", "8x2", "4x4"]
+            spectrum: ["4x2", "8x2", "10x2", "4x4"]
         },
         sticker: {
             media: ["2x2", "4x2", "4x4"],           timer: ["2x2", "4x2"],
@@ -153,7 +154,7 @@ Singleton {
             games: ["2x2", "4x2"],                  calendar: ["2x2", "4x2", "4x4"],
             notes: ["2x2", "4x2", "4x4", "8x2"],    tasks: ["2x2", "4x2", "4x4"],
             clock: ["2x2", "4x2", "4x4", "8x2"],    photo: ["2x2", "4x2", "4x4", "8x2"],
-            spectrum: ["4x2", "8x2", "4x4"]
+            spectrum: ["4x2", "8x2", "10x2", "4x4"]
         }
     })
 

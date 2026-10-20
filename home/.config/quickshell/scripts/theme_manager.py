@@ -412,7 +412,7 @@ MPV_OPTIONS = "no-audio loop hwdec=auto panscan=1.0"
 DEFAULT_STATE = {"activeTheme": "adaptive", "currentWallpaper": "", "currentMotion": ""}
 
 # Fallback accent when an image yields nothing usable.
-NEUTRAL_ACCENT = {"hex": "#89B4FA", "r": 137, "g": 180, "b": 250}
+NEUTRAL_ACCENT = {"hex": "#D5DAE0", "r": 213, "g": 218, "b": 224}
 
 
 def ensure_state_dir():
@@ -3993,6 +3993,12 @@ def pick_accent(swatches):
     if not swatches:
         return NEUTRAL_ACCENT
 
+    # A picture without real colour — ink drawings, monochrome photography —
+    # drinks a neutral: its loudest swatch is compression noise, and losing
+    # that race would dye a grey picture with some accidental blue.
+    if max(saturation(*hex_to_rgb(value)) for value in swatches) < 0.30:
+        return NEUTRAL_ACCENT
+
     candidates = []
     for value in swatches:
         red, green, blue = hex_to_rgb(value)
@@ -4027,6 +4033,30 @@ def build_palette(image_path):
     accent = pick_accent(sample_colors(image_path))
     red, green, blue = accent["r"], accent["g"], accent["b"]
 
+    # Semantic colours: keep their hue in colorful images; wash them for monochrome.
+    def wash(hexv):
+        r, g, b = hex_to_rgb(hexv)
+        lum = 0.299 * r + 0.587 * g + 0.114 * b
+        return rgb_to_hex(*[round(lum + (c - lum) * 0.25) for c in (r, g, b)])
+
+    # Monochrome detection: low saturation accent signals grayscale/monochrome.
+    def mono_sat(r, g, b):
+        highest = max(r, g, b)
+        lowest = min(r, g, b)
+        return 0 if highest == 0 else (highest - lowest) / highest
+
+    if mono_sat(red, green, blue) < 0.12:
+        # Wash semantic colours for a neutral, grey‑ish palette that respects meaning via lightness.
+        red = wash("#f38ba8")
+        green = wash("#a6e3a1")
+        yellow = wash("#f9e2af")
+        blue = wash("#89b4fa")
+    else:
+        red = "#f38ba8"
+        green = "#a6e3a1"
+        yellow = "#f9e2af"
+        blue = "#89b4fa"
+
     # Surfaces are near-black, tinted just enough to feel related to the accent.
     background = (17 + red * 0.04, 19 + green * 0.04, 24 + blue * 0.05)
     surface = tuple(channel + 14 for channel in background)
@@ -4043,10 +4073,10 @@ def build_palette(image_path):
         "accent": accent["hex"],
         "accentHover": rgb_to_hex(red * 1.15 + 15, green * 1.15 + 15, blue * 1.15 + 15),
         "accentText": "#11111b" if luminance(red, green, blue) > 0.45 else "#ffffff",
-        "red": "#f38ba8",
-        "green": "#a6e3a1",
-        "yellow": "#f9e2af",
-        "blue": "#89b4fa",
+        "red": red,
+        "green": green,
+        "yellow": yellow,
+        "blue": blue,
     }
 
 
