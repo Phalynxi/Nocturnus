@@ -28,7 +28,7 @@ PanelWindow {
 
     property bool open: false
 
-    function close(): void {
+    function closeDown(): void {
         root.open = false
     }
 
@@ -39,7 +39,7 @@ PanelWindow {
     }
 
     function toggle(): void {
-        root.open ? root.close() : root.openUp()
+        root.open ? root.closeDown() : root.openUp()
     }
 
     // No scan on boot; the first open asks for the folder.
@@ -58,45 +58,43 @@ PanelWindow {
     visible: root.open
     color: "transparent"
     WlrLayershell.namespace: "nocturnus-hive"
-    WlrLayershell.layer: WlrLayer.Top
+    WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: root.open
         ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
     // ── THE DARK ─────────────────────────────────────────────────────────────
     //
-    // Everything under the scrim goes quiet; a click that lands nowhere on
-    // the comb closes the hive. The ground reads like a fogged pane, not a
-    // plain dim.
+    // Nothing paints behind the comb: the hive asks for the desk itself, so
+    // the MouseArea is silent glass — it only listens, catching the click
+    // that lands off the comb (closing the hive) and the wheel (drifting the
+    // pages).
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         hoverEnabled: true
-        cursorShape: root.open ? Qt.ArrowCursor : Qt.ArrowCursor
-        onClicked: root.close()
-
-        Rectangle {
-            anchors.fill: parent
-            color: Qt.rgba(Theme.island.r, Theme.island.g, Theme.island.b, 0.62)
-        }
+        cursorShape: Qt.ArrowCursor
+        onClicked: root.closeDown()
+        // The wheel drifts the hive through the stack.
+        onWheel: wheel => comb.turn(wheel.angleDelta.y > 0 ? 1 : -1)
     }
 
     // ── THE COMB ─────────────────────────────────────────────────────────────
     //
     // Pointy-top hexagons: columns √3·R apart, rows 1.5·R, odd rows staggered
-    // half a column. Six cells to a row; the comb centres itself.
+    // half a column. Seven cells to a row; the comb centres itself.
     Item {
         id: comb
 
         readonly property real radius: 92
-        readonly property int perRow: 6
-        readonly property real side: root.radius * Math.sqrt(3)
+        readonly property int perRow: 7
+        readonly property real side: comb.radius * Math.sqrt(3)
         readonly property real pad: 4
 
-        readonly property var stills: WallpaperService.wallpapers.map(path => ({
-            path: path,
+        readonly property var stills: WallpaperService.wallpapers.map(w => ({
+            path: w.path,
             poster: "",
             motion: false,
-            name: String(path).split("/").pop().replace(/\.[^.]*$/, "")
+            name: w.name
         }))
 
         readonly property var moving: WallpaperService.animated.map(entry => ({
@@ -108,15 +106,31 @@ PanelWindow {
 
         readonly property var cells: comb.stills.concat(comb.moving)
 
+        // The hive drifts: the folder holds hundreds, so the comb shows a
+        // page at a time and the wheel walks the stack. Twenty-one cells —
+        // three staggered rows of seven — fit under the bar's airspace.
+        property int page: 0
+        readonly property int perPage: 21
+        readonly property int pages: Math.max(1, Math.ceil(comb.cells.length / comb.perPage))
+        readonly property var pageCells: comb.cells.slice(
+            comb.page * comb.perPage, (comb.page + 1) * comb.perPage)
+
+        function turn(drift: int): void {
+            const at = comb.page + drift
+            comb.page = Math.max(0, Math.min(comb.pages - 1, at))
+        }
+
         // The desk's own picture, chosen or playing: the cell that matches
         // wears the accent.
         readonly property string pickCurrent: WallpaperService.chosen
 
-        readonly property int rows: Math.max(1, Math.ceil(comb.cells.length / comb.perRow))
-        readonly property real width: comb.perRow * comb.side + comb.pad * 2
+        readonly property int rows: Math.max(1, Math.ceil(comb.pageCells.length / comb.perRow))
+        readonly property real spanX: comb.perRow * comb.side + comb.pad * 2
             + (comb.rows > 1 ? comb.side / 2 : 0)
-        readonly property real height: (comb.rows - 1) * comb.radius * 1.5
+        readonly property real spanY: (comb.rows - 1) * comb.radius * 1.5
             + comb.radius * 2 + comb.pad * 2
+        width: comb.spanX
+        height: comb.spanY
 
         anchors.centerIn: parent
 
@@ -136,13 +150,15 @@ PanelWindow {
         // Spaced caps above the comb, the count in mono under it. The hive
         // carries only what it selects; the bar keeps the time.
         Column {
+            width: parent.width
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.top
             anchors.bottomMargin: 30
             spacing: 3
 
             Text {
-                anchors.horizontalCenter: parent.horizontalCenter
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
                 text: "wallpapers".toUpperCase().split("").join(" ")
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeSmall
@@ -150,8 +166,9 @@ PanelWindow {
             }
 
             Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: `${comb.cells.length}`
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                text: `${comb.page + 1} / ${comb.pages}`
                 font.family: Theme.fontMono
                 font.pixelSize: Theme.fontSizeSmall
                 color: Theme.textMuted
@@ -172,7 +189,7 @@ PanelWindow {
         }
 
         Repeater {
-            model: comb.cells
+            model: comb.pageCells
 
             delegate: Item {
                 id: cellRoot
@@ -181,7 +198,7 @@ PanelWindow {
                 // is why nothing here asks for modelData.
                 required property int index
 
-                readonly property var cellData: comb.cells[index]
+                readonly property var cellData: comb.pageCells[index]
                 readonly property real radius: comb.radius
 
                 readonly property int row: Math.floor(cellRoot.index / comb.perRow)
@@ -201,8 +218,8 @@ PanelWindow {
                 // stroke never clips at the delegate's edge.
                 width: comb.side + comb.pad * 2
                 height: comb.radius * 2 + comb.pad * 2
-                x: comb.xFor(cellRoot)
-                y: comb.yFor(cellRoot)
+                x: root.xFor(cellRoot)
+                y: root.yFor(cellRoot)
 
                 z: cellRoot.hovered || cellRoot.current ? 2 : 1
                 scale: cellRoot.hovered ? 1.06 : 1.0
@@ -226,26 +243,22 @@ PanelWindow {
                     id: picture
 
                     anchors.fill: parent
-                    visible: false
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
-                    source: cellRoot.cellData.motion
-                        ? (cellRoot.cellData.poster !== "" ? `file://${cellRoot.cellData.poster}` : "")
-                        : `file://${cellRoot.cellData.path}`
+                    source: encodeURI("file://" + (cellRoot.cellData.motion
+                        ? (cellRoot.cellData.poster !== "" ? cellRoot.cellData.poster : "")
+                        : cellRoot.cellData.path))
                     sourceSize.width: Math.round(parent.width * 2)
                     sourceSize.height: Math.round(parent.height * 2)
                 }
 
                 Shape {
                     anchors.fill: parent
-                    layer.enabled: true
 
                     ShapePath {
                         strokeWidth: cellRoot.current ? 2.5 : 1
-                        strokeStyle: ShapePath.Solid
                         strokeColor: cellRoot.current || cellRoot.hovered
                             ? Theme.accent : Theme.hairline
-                        fillColor: "#00000000"
                         fillItem: cellRoot.cellData.motion
                             && cellRoot.cellData.poster === "" ? null : wax
 
@@ -290,9 +303,15 @@ PanelWindow {
     }
 
     // The comb's own coordinates: a cell's x is its column plus half a column
-    // on every odd row, plus the pad that keeps strokes unclipped.
+    // on every odd row, plus the pad; a shorter last row is centred, so the
+    // page ends mid-comb instead of bleeding to the left edge.
     function xFor(cell: Item): real {
-        return comb.pad + cell.col * comb.side + (cell.row % 2) * comb.side / 2
+        const row = cell.row
+        const inRow = Math.min(comb.perRow,
+            comb.pageCells.length - row * comb.perRow)
+        const shortOf = Math.max(0, comb.perRow - inRow)
+        return comb.pad + shortOf * comb.side / 2
+            + cell.col * comb.side + (row % 2) * comb.side / 2
     }
 
     function yFor(cell: Item): real {
@@ -303,6 +322,21 @@ PanelWindow {
         enabled: root.open
         sequence: "Escape"
         context: Qt.WindowShortcut
-        onActivated: root.close()
+        onActivated: root.closeDown()
+    }
+
+    // The hive also drifts on the arrows.
+    Shortcut {
+        enabled: root.open
+        sequence: "Left"
+        context: Qt.WindowShortcut
+        onActivated: comb.turn(-1)
+    }
+
+    Shortcut {
+        enabled: root.open
+        sequence: "Right"
+        context: Qt.WindowShortcut
+        onActivated: comb.turn(1)
     }
 }

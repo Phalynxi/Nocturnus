@@ -30,48 +30,53 @@ Item {
     readonly property real warmth: StatsService.temperature
         ? Math.max(0, Math.min(1, StatsService.temperature.celsius / 100)) : 0
 
-    // One row of the hairlines: a spaced-caps label and its reading, then a
-    // thin bar of accent血压 the fill. `fill` in 0…1.
-    component Hairline: Column {
-        id: line
+        // One row of the hairlines: a spaced-caps label and its reading, then a
+        // thin bar of accentulated the fill. `fill` in 0…1.
+        component Hairline: Column {
+            id: line
 
-        property string label: ""
-        property string reading: ""
-        property real fill: 0
-        property color tone: root.ink.accent
+            property string label: ""
+            property string reading: ""
+            property real fill: 0
+            property color tone: root.ink.accent
 
-        width: parent.width
-        spacing: 6
-
-        Row {
-            anchors.left: parent.left
-            anchors.right: parent.right
-
-            Text {
-                text: line.label
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSizeSmall
-                font.letterSpacing: 2
-                color: root.ink.muted
-            }
-
-            Text {
-                anchors.right: parent.right
-                text: line.reading
-                font.family: Theme.fontMono
-                font.pixelSize: Theme.fontSizeSmall
-                color: root.ink.muted
-            }
-        }
-
-        UsageBar {
             width: parent.width
-            height: 4
-            progress: line.fill
-            fillColor: line.tone
-            trackColor: root.ink.raised
+            spacing: 6
+
+            // An Item rather than a Row, so the reading can pin to the far
+            // edge: anchors in a Row are refused.
+            Item {
+                width: parent.width
+                height: Math.max(labelText.height, readingText.height)
+
+                Text {
+                    id: labelText
+                    anchors.left: parent.left
+                    text: line.label
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSizeSmall
+                    font.letterSpacing: 2
+                    color: root.ink.muted
+                }
+
+                Text {
+                    id: readingText
+                    anchors.right: parent.right
+                    text: line.reading
+                    font.family: Theme.fontMono
+                    font.pixelSize: Theme.fontSizeSmall
+                    color: root.ink.muted
+                }
+            }
+
+            UsageBar {
+                width: parent.width
+                height: 4
+                progress: line.fill
+                fillColor: line.tone
+                trackColor: root.ink.raised
+            }
         }
-    }
 
     Row {
         visible: root.family !== "4x4"

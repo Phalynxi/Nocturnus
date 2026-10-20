@@ -371,7 +371,7 @@ ShellRoot {
     GlobalShortcut {
         name: "hive"
         description: "Open the wallpaper hive"
-        onPressed: root.hive?.toggle()
+        onPressed: hive.toggle()
     }
 
     // Same panel, on the palette strip. Each name only closes from its own
@@ -573,14 +573,14 @@ ShellRoot {
         // typing `wallpaper hive` wants the bees.
         function hive(action: string): string {
             if (action === "close") {
-                root.hive.close()
+                hive.closeDown()
                 return "closed"
             }
             if (action === "toggle") {
-                root.hive.toggle()
+                hive.toggle()
                 return "toggled"
             }
-            root.hive.openUp()
+            hive.openUp()
             return "open"
         }
     }
