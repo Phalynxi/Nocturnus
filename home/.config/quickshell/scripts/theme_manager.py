@@ -803,6 +803,124 @@ def write_cursor_theme(colors):
                    capture_output=True)
 
 
+def write_opencode_theme(colors):
+    """Write Opencode's theme as the terminal palette, in glass.
+
+    Opencode's own `system` theme is honest about its base — the TUI's
+    background is transparent — but its panels, menus and diff backdrops
+    are opaque lifts of the terminal background, which over a translucent
+    kitty read as solid sheets of plastic. This writes a custom `nocturnus`
+    theme with the same palette — text, palette colours, the twelve-step
+    lift of the background as borders — but every container drawn in hex8:
+    the terminal's own alpha, so the panels are veils over the editor's
+    ground rather than tiles on it.
+    """
+    CONFIG_DIR = os.path.expanduser("~/.config/opencode")
+    os.makedirs(os.path.join(CONFIG_DIR, "themes"), exist_ok=True)
+
+    background = colors["background"]
+    text = colors["text"]
+    text_muted = colors["textMuted"]
+    accent = colors["accent"]
+    blue = colors["blue"]
+    red = colors["red"]
+    green = colors["green"]
+    yellow = colors["yellow"]
+
+    def x8(color, alpha):
+        """A colour with an alpha pair, as an [r, g, b, a] tuple.
+
+        Hex8 is the unstable format here — this build parses it into an
+        opaque fallback grey — while the schema's tuple form carries the
+        alpha through untouched.
+        """
+        red, green, blue = hex_to_rgb(color) if isinstance(color, str) else color
+        return [red, green, blue, round(alpha, 2)]
+
+    def lift(step):
+        """The background lifted `step` twelfths towards white, the same
+        ramp the system theme walks over the terminal's own background."""
+        return mix(background, "#ffffff", step / 12 * 0.4)
+
+    def as_if(color, step):
+        """A hint of a palette colour over `step` of the background."""
+        return mix(lift(step), color, 0.55)
+
+    theme = {
+        "primary": accent,
+        "secondary": blue,
+        "accent": accent,
+        "error": red,
+        "warning": yellow,
+        "success": green,
+        "info": blue,
+        "text": text,
+        "textMuted": text_muted,
+        "selectedListItemText": background,
+        # The TUI's ground stays fully transparent, as the system theme has
+        # it; what sat opaque over it are now mists.
+        "background": "transparent",
+        "backgroundPanel": x8(lift(2), 0.55),
+        "backgroundElement": x8(lift(3), 0.55),
+        "backgroundMenu": x8(lift(3), 0.55),
+        "border": lift(7),
+        "borderActive": lift(8),
+        "borderSubtle": lift(6),
+        "diffAdded": green,
+        "diffRemoved": red,
+        "diffContext": lift(7),
+        "diffHunkHeader": lift(7),
+        "diffHighlightAdded": green,
+        "diffHighlightRemoved": red,
+        "diffAddedBg": x8(as_if(green, 2), 0.5),
+        "diffRemovedBg": x8(as_if(red, 2), 0.5),
+        "diffContextBg": x8(lift(2), 0.5),
+        "diffAddedLineNumberBg": x8(as_if(green, 2), 0.45),
+        "diffRemovedLineNumberBg": x8(as_if(red, 2), 0.45),
+        "diffLineNumber": text_muted,
+        "markdownText": text,
+        "markdownHeading": accent,
+        "markdownLink": blue,
+        "markdownLinkText": accent,
+        "markdownCode": green,
+        "markdownBlockQuote": text_muted,
+        "markdownEmph": yellow,
+        "markdownStrong": accent,
+        "markdownHorizontalRule": text_muted,
+        "markdownListItem": blue,
+        "markdownListEnumeration": accent,
+        "markdownImage": blue,
+        "markdownImageText": accent,
+        "markdownCodeBlock": text,
+        "syntaxComment": text_muted,
+        "syntaxKeyword": accent,
+        "syntaxFunction": blue,
+        "syntaxVariable": text,
+        "syntaxString": green,
+        "syntaxNumber": yellow,
+        "syntaxType": accent,
+        "syntaxOperator": accent,
+        "syntaxPunctuation": text,
+    }
+
+    path = os.path.join(CONFIG_DIR, "themes", "nocturnus.json")
+    with open(path, "w") as file:
+        json.dump({
+            "$schema": "https://opencode.ai/theme.json",
+            "theme": theme,
+        }, file, indent=2)
+
+    file = os.path.join(CONFIG_DIR, "cli.json")
+    try:
+        with open(file) as handle:
+            cli = json.load(handle)
+    except (OSError, ValueError):
+        cli = {"$schema": "https://opencode.ai/v2/cli.json"}
+    cli.setdefault("theme", {})["name"] = "nocturnus"
+    with open(file, "w") as handle:
+        json.dump(cli, handle, indent=2)
+
+
 def build_btop_theme(colors):
     """btop's 48 theme colours, derived from the palette's 13.
 
@@ -4032,6 +4150,7 @@ def main():
         write_btop_theme(colors)
         write_cava_theme(colors)
         write_yazi_flavor(colors)
+        write_opencode_theme(colors)
         write_cursor_theme(colors)
         push_nvim_colorscheme(colors)
         write_imv_config(colors)
