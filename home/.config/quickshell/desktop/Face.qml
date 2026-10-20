@@ -13,6 +13,7 @@ import "../services"
 import "./faces"
 import "./faces/analogue"
 import "./faces/sticker"
+import "./faces/nocturnus"
 
 // Picks the face for a module, a family (size) and a theme. Modern has one
 // registry per family, falling back within that registry for modules without a
@@ -35,10 +36,13 @@ Item {
     readonly property bool shared: root.moduleId === "notes" || root.moduleId === "spectrum"
     readonly property bool analogue: root.theme === "analogue" && !root.shared
     readonly property bool sticker: root.theme === "sticker" && !root.shared
+    readonly property bool nocturnus: root.theme === "nocturnus" && !root.shared
 
     Loader {
         anchors.fill: parent
         sourceComponent: {
+            if (root.nocturnus)
+                return noctface
             if (root.analogue)
                 return analogue
             if (root.sticker)
@@ -51,6 +55,11 @@ Item {
                 return bands
             return wides
         }
+    }
+
+    Component {
+        id: noctface
+        Nocturnus { moduleId: root.moduleId; family: root.family; ink: root.ink; row: root.row }
     }
 
     Component {
