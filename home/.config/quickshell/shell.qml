@@ -18,6 +18,7 @@ import Quickshell.Io
 
 import "./bar"
 import "./capture"
+import "./components"
 import "./desktop"
 import "./dock"
 import "./lock"
@@ -206,6 +207,12 @@ ShellRoot {
 
     // A normal window rather than an island panel, so the island stays
     // visible while its settings change.
+    // The wallpapers as a comb. Nothing of the hive belongs to the bar: its
+    // own surface, on its own key.
+    Hive {
+        id: hive
+    }
+
     SettingsWindow {
         id: settingsWindow
 
@@ -357,6 +364,14 @@ ShellRoot {
         name: "appearance"
         description: "Open the island appearance panel"
         onPressed: root.island?.toggle("appearance")
+    }
+
+    // The hive is the wallpapers' own surface, nothing on the bar: a comb of
+    // hexagons on a scrim.
+    GlobalShortcut {
+        name: "hive"
+        description: "Open the wallpaper hive"
+        onPressed: root.hive?.toggle()
     }
 
     // Same panel, on the palette strip. Each name only closes from its own
@@ -552,6 +567,21 @@ ShellRoot {
                 return "usage: qs ipc call wallpaper set <path>"
             WallpaperService.apply(path)
             return path
+        }
+
+        // The hive: [open], close, toggle. Open is the default verb, since
+        // typing `wallpaper hive` wants the bees.
+        function hive(action: string): string {
+            if (action === "close") {
+                root.hive.close()
+                return "closed"
+            }
+            if (action === "toggle") {
+                root.hive.toggle()
+                return "toggled"
+            }
+            root.hive.openUp()
+            return "open"
         }
     }
 
