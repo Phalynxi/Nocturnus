@@ -295,9 +295,19 @@ PanelWindow {
                     sourceItem: picture
                     hideSource: true
                     live: true
-                    visible: false
+                    visible: true
+                    // Offstage: the texture pass runs regardless, but the
+                    // surface is parked beyond the panel so its rectangle
+                    // never falls on the hive.
+                    x: 0
+                    y: -4000
+                    width: parent.width
+                    height: parent.height
                 }
 
+                // The raw picture must not paint itself: the wax hides it
+                // (hideSource) while sampling it — a rectangle of it lands
+                // on the neighbours' corners otherwise.
                 Image {
                     id: picture
 
@@ -354,18 +364,6 @@ PanelWindow {
                     }
                 }
 
-                // What plays instead of sits: a small ring at the apex.
-                Text {
-                    visible: cellRoot.cellData.motion
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.top: parent.top
-                    anchors.topMargin: 12
-                    text: "󱅋"
-                    font.family: Theme.fontMono
-                    font.pixelSize: Theme.fontSizeRegular
-                    color: Theme.accentText
-                }
-
                 // What plays instead of sits: the cell is blurred at rest,
                 // and a small sigil marks it — a play wedge in wax-white.
                 Shape {
@@ -414,8 +412,8 @@ PanelWindow {
 
         Repeater {
             model: {
-                const near = []
                 const reach = [-1, 1, -2, 2]
+                let near = []
                 for (const step of reach) {
                     const at = comb.page + step
                     if (at >= 0 && at < comb.pages)

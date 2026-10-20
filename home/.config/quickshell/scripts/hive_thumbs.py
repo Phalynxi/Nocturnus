@@ -27,7 +27,7 @@ def cut(path: str, dest: Path, mist: bool) -> None:
     command = ["magick", path, "-thumbnail", f"{SIZE}x{SIZE}^",
                "-gravity", "center", "-extent", f"{SIZE}x{SIZE}"]
     if mist:
-        command += ["-blur", "0x14"]
+        command += ["-blur", "0x30"]
     command += ["-quality", "87", str(dest)]
     subprocess.run(command, check=False,
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

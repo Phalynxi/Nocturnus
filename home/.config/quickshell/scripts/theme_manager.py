@@ -2151,6 +2151,12 @@ def build_vesktop_css(colors):
             return mix(accent, "#ffffff", -distance * VESKTOP_RAMP)
         return mix(accent, "#000000", distance * VESKTOP_RAMP)
 
+    # A glass pane: the surface colour at an alpha. The window itself is
+    # transparent (Vesktop's own flag), and what shows through is sun glass.
+    def pane(value, alpha):
+        red, green, blue = hex_to_rgb(value)
+        return f"rgba({red},{green},{blue},{alpha:.2f})"
+
     # The same rung as an "H S% L%" triplet. Most of Discord's translucent
     # accents are `hsl(var(--brand-500-hsl) / a)` and never read --brand-500.
     def parts(value):
@@ -2159,29 +2165,33 @@ def build_vesktop_css(colors):
 
     grounds = [
         # Darkest at the window edge, lightest in the chat, as in Discord.
-        ("background-tertiary", deep),
-        ("background-secondary", ground),
-        ("background-secondary-alt", ground),
-        ("background-primary", raised),
+        # Every surface is a pane now: the window is transparent, and the
+        # desktop's wallpapers show through tinted glass, deepest at the
+        # frame, softest over the chat. Flyouts carry the most ink so they
+        # stay readable over anything.
+        ("background-tertiary", pane(deep, 0.42)),
+        ("background-secondary", pane(ground, 0.52)),
+        ("background-secondary-alt", pane(ground, 0.52)),
+        ("background-primary", pane(raised, 0.58)),
         ("background-accent", accent),
-        ("background-floating", deep),
-        ("background-nested-floating", raised),
-        ("background-mobile-primary", raised),
-        ("background-mobile-secondary", ground),
-        ("background-modifier-hover", hover),
-        ("background-modifier-active", hover),
-        ("background-modifier-selected", hover),
-        ("background-modifier-accent", border),
-        ("channeltextarea-background", ground),
-        ("activity-card-background", raised),
-        ("deprecated-card-bg", raised),
-        ("deprecated-card-editable-bg", raised),
-        ("modal-background", raised),
-        ("modal-footer-background", ground),
-        ("input-background", ground),
-        ("popover-background", raised),
-        ("chat-background", raised),
-        ("home-background", raised),
+        ("background-floating", pane(deep, 0.68)),
+        ("background-nested-floating", pane(raised, 0.66)),
+        ("background-mobile-primary", pane(raised, 0.58)),
+        ("background-mobile-secondary", pane(ground, 0.52)),
+        ("background-modifier-hover", pane(hover, 0.50)),
+        ("background-modifier-active", pane(hover, 0.55)),
+        ("background-modifier-selected", pane(hover, 0.55)),
+        ("background-modifier-accent", pane(border, 0.80)),
+        ("channeltextarea-background", pane(ground, 0.56)),
+        ("activity-card-background", pane(raised, 0.58)),
+        ("deprecated-card-bg", pane(raised, 0.58)),
+        ("deprecated-card-editable-bg", pane(ground, 0.56)),
+        ("modal-background", pane(deep, 0.72)),
+        ("modal-footer-background", pane(ground, 0.60)),
+        ("input-background", pane(ground, 0.56)),
+        ("popover-background", pane(deep, 0.72)),
+        ("chat-background", pane(raised, 0.58)),
+        ("home-background", pane(raised, 0.58)),
     ]
 
     type_ = [
@@ -2282,12 +2292,12 @@ def build_vesktop_css(colors):
     refreshed = [
         # Darkest at the frame. theme-midnight sets all three to black unless
         # they are overridden.
-        ("background-base-lowest", deep),
-        ("background-base-lower", ground),
-        ("background-base-low", ground),
-        ("background-surface-high", raised),
-        ("background-surface-higher", raised),
-        ("background-surface-highest", hover),
+        ("background-base-lowest", pane(deep, 0.42)),
+        ("background-base-lower", pane(ground, 0.52)),
+        ("background-base-low", pane(ground, 0.52)),
+        ("background-surface-high", pane(raised, 0.58)),
+        ("background-surface-higher", pane(raised, 0.58)),
+        ("background-surface-highest", pane(hover, 0.55)),
 
         # The accent where the refresh names it rather than the ramp.
         ("background-brand", accent),

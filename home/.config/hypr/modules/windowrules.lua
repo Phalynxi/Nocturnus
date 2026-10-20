@@ -73,6 +73,16 @@ hl.window_rule({
 })
 
 
+-- · Vesktop wears the glass look too: the theme paints translucent panes,
+--   and the window itself fades so the wallpaper shows through them.
+hl.window_rule({
+    name  = "vesktop-translucent",
+    match = { class = "^(vesktop|Vesktop)$" },
+
+    opacity = "0.88 0.88",
+})
+
+
 -- · imv, a look at one picture from the desk or from yazi, floats over the
 -- · layout instead of reflowing it.
 hl.window_rule({
