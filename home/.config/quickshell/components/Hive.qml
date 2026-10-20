@@ -10,6 +10,7 @@
 import QtQuick
 import QtQuick.Shapes
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
 
 import "../theme"
@@ -38,6 +39,41 @@ PanelWindow {
         root.open = true
     }
 
+    // The wax is pre-cut: on the first open a helper crops every wallpaper
+    // into a small thumb in the cache, and cells read from it rather than
+    // decoding a 4K picture for a 160-pixel cell. Pages never pop in.
+    property var thumbs: ({})
+    property bool thumbsStarted: false
+
+    function prepThumbs(): void {
+        if (root.thumbsStarted || comb.cells.length === 0)
+            return
+        root.thumbsStarted = true
+        const list = comb.cells.map(c => c.path)
+            .concat(comb.cells
+                .filter(c => c.motion && c.poster !== "").map(c => c.poster))
+        thumbsProcess.command = [
+            "python3", Quickshell.shellPath("scripts/hive_thumbs.py"),
+            JSON.stringify(list)
+        ]
+        thumbsProcess.running = true
+    }
+
+    Process {
+        id: thumbsProcess
+
+        command: []
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    root.thumbs = JSON.parse(text)
+                } catch (e) {
+                    root.thumbs = ({})
+                }
+            }
+        }
+    }
+
     function toggle(): void {
         root.open ? root.closeDown() : root.openUp()
     }
@@ -48,6 +84,8 @@ PanelWindow {
             if (root.open && comb.cells.length === 0)
                 WallpaperService.scan()
         })
+        comb.cellsChanged.connect(root.prepThumbs)
+        root.prepThumbs()
     }
 
     anchors.top: true
@@ -75,7 +113,7 @@ PanelWindow {
         cursorShape: Qt.ArrowCursor
         onClicked: root.closeDown()
         // The wheel drifts the hive through the stack.
-        onWheel: wheel => comb.turn(wheel.angleDelta.y > 0 ? 1 : -1)
+        onWheel: wheel => comb.turn(wheel.angleDelta.y < 0 ? 1 : -1)
     }
 
     // ── THE COMB ─────────────────────────────────────────────────────────────
@@ -200,9 +238,15 @@ PanelWindow {
                     anchors.fill: parent
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
-                    source: encodeURI("file://" + (cellRoot.cellData.motion
-                        ? (cellRoot.cellData.poster !== "" ? cellRoot.cellData.poster : "")
-                        : cellRoot.cellData.path))
+                    // Thumbs read from the pre-cut cache; a wallpaper the
+                    // helper has not reached yet shows the original.
+                    source: {
+                        const small = root.thumbs[cellRoot.cellData.path]
+                        const big = encodeURI("file://" + (cellRoot.cellData.motion
+                            ? (cellRoot.cellData.poster !== "" ? cellRoot.cellData.poster : "")
+                            : cellRoot.cellData.path))
+                        return small !== undefined ? "file://" + small : big
+                    }
                     sourceSize.width: Math.round(parent.width * 2)
                     sourceSize.height: Math.round(parent.height * 2)
                 }
@@ -211,9 +255,9 @@ PanelWindow {
                     anchors.fill: parent
 
                     ShapePath {
-                        strokeWidth: cellRoot.current ? 2.5 : 1
-                        strokeColor: cellRoot.current || cellRoot.hovered
-                            ? Theme.accent : Theme.hairline
+                        // No rim: the wax says its shape on its own, and the
+                        // fill reaches the path's edge exactly.
+                        strokeWidth: -1
                         fillItem: cellRoot.cellData.motion
                             && cellRoot.cellData.poster === "" ? null : wax
 
@@ -253,7 +297,7 @@ PanelWindow {
                     }
                     onEntered: comb.hovered = cellRoot.index
                     // The wheel drifts the stack from anywhere on the hive.
-                    onWheel: wheel => comb.turn(wheel.angleDelta.y > 0 ? 1 : -1)
+                    onWheel: wheel => comb.turn(wheel.angleDelta.y < 0 ? 1 : -1)
                 }
             }
         }
