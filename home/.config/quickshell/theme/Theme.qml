@@ -36,7 +36,11 @@ QtObject {
     readonly property bool solid: root.surfaceStyle !== "glass"
     readonly property bool glass: root.surfaceStyle === "glass"
 
-    readonly property color island: "#000000"
+    // The island drinks its palette now: a deep wash of the accent, near
+    // black but never neutral, so the pills sit IN the wallpaper's colour
+    // family instead of floating as black boxes over it.
+    readonly property color island: Qt.rgba(root.accent.r * 0.12 + 0.03,
+        root.accent.g * 0.12 + 0.03, root.accent.b * 0.12 + 0.03, 1.0)
     readonly property color islandGround: root.groundOf(root.surfaceStyle)
 
     // The terminal's ground: `TERMINAL_TINT` and kitty's `background_opacity`.
@@ -47,23 +51,29 @@ QtObject {
 
     // Any style's ground and rim, for a picture of one that is not chosen.
     function groundOf(style: string): color {
-        // Translucent black over the compositor's blur, not the old tinted glass.
-        return style === "glass" ? Qt.rgba(0, 0, 0, 0.60) : root.island
+        // The accent, sunk to a dark wash, over the compositor's blur.
+        return style === "glass" ? Qt.rgba(root.accent.r * 0.16,
+            root.accent.g * 0.16, root.accent.b * 0.16, 0.66) : root.island
     }
 
     // The dock's ground. Lighter glass grounds go grey over bright
-    // wallpapers, and the capsule stops reading as part of the desk's black
+    // wallpapers, and the capsule stops reading as part of the desk's dark
     // family, so the dock drinks deeper than the bar's ground.
     function dockGroundOf(style: string): color {
-        return style === "glass" ? Qt.rgba(0, 0, 0, 0.86) : root.island
+        return style === "glass" ? Qt.rgba(root.accent.r * 0.13,
+            root.accent.g * 0.13, root.accent.b * 0.13, 0.88) : root.island
     }
     function rimOf(style: string): color {
         // No border on the glass look; shadows carry the edge.
-        return style === "glass" ? "transparent" : "#262626"
+        return style === "glass" ? "transparent"
+            : Qt.rgba(root.accent.r * 0.16 + 0.08, root.accent.g * 0.16 + 0.08,
+                root.accent.b * 0.16 + 0.09, 1.0)
     }
-    readonly property color islandSurface: "#141414"
-    readonly property color islandSurfaceHover: "#1f1f1f"
-    readonly property color islandBorder: "#262626"
+    readonly property color islandSurface: Qt.rgba(root.accent.r * 0.12 + 0.07,
+        root.accent.g * 0.12 + 0.07, root.accent.b * 0.12 + 0.08, 1.0)
+    readonly property color islandSurfaceHover: Qt.rgba(root.accent.r * 0.12 + 0.11,
+        root.accent.g * 0.12 + 0.11, root.accent.b * 0.12 + 0.12, 1.0)
+    readonly property color islandBorder: root.islandSurfaceHover
 
     // The desk's widgets have a ground of their own, or the bar's
     // (`SettingsService.desktopGround`, empty to follow).

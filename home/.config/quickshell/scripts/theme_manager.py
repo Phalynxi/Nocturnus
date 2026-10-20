@@ -3949,8 +3949,47 @@ def sample_colors(image_path):
     return re.findall(r"#[0-9A-Fa-f]{6}", result.stdout)
 
 
+def hue_of(red, green, blue):
+    highest = max(red, green, blue)
+    lowest = min(red, green, blue)
+    span = highest - lowest
+    if span == 0:
+        return 0.0
+    if highest == red:
+        raw = (green - blue) / span
+    elif highest == green:
+        raw = 2.0 + (blue - red) / span
+    else:
+        raw = 4.0 + (red - green) / span
+    return (raw * 60.0) % 360.0
+
+
+def accent_penalty(hue, sat, lum):
+    """How much a hue fights the desk, as a 0..1 deduction.
+
+    Muddy is the enemy: yellow mustards and dark browns read as neglect at
+    small sizes, however dominant they are in the picture. Loud pure yellow
+    is nearly as bad. Cool greens and teals, and honest reds, wear well —
+    they lose nothing.
+    """
+    yellow = 30.0 <= hue < 72.0
+    brown = 8.0 <= hue < 30.0
+    if yellow:
+        return 0.34 if sat < 0.55 else 0.18
+    if brown and lum < 0.45:
+        return 0.24
+    return 0.0
+
+
 def pick_accent(swatches):
-    """Prefer a saturated mid-tone; those read as an accent at small sizes."""
+    """Prefer a saturated mid-tone; those read as an accent at small sizes.
+
+    The score weighs saturation and a calm lightness, then deducts for the
+    hues that never look deliberate — the mustards and the muds. A hue
+    under deduction only takes the chair when nothing clean is on offer:
+    a picture of lemons keeps its lemons out of the accent chair and
+    gives the desk its greens instead.
+    """
     if not swatches:
         return NEUTRAL_ACCENT
 
@@ -3962,11 +4001,22 @@ def pick_accent(swatches):
             "r": red, "g": green, "b": blue,
             "lum": luminance(red, green, blue),
             "sat": saturation(red, green, blue),
+            "hue": hue_of(red, green, blue),
         })
 
     vibrant = [c for c in candidates if c["sat"] > 0.2 and 0.2 < c["lum"] < 0.85]
+
+    def score_of(c):
+        deduction = accent_penalty(c["hue"], c["sat"], c["lum"])
+        return (c["sat"] * 1.4
+                + (1.0 - abs(c["lum"] - 0.55)) * 0.6
+                - deduction)
+
     if vibrant:
-        return max(vibrant, key=lambda c: c["sat"] * 2.0 + (1.0 - abs(c["lum"] - 0.55)))
+        clean = [c for c in vibrant if accent_penalty(
+            c["hue"], c["sat"], c["lum"]) == 0.0]
+        field = clean if clean else vibrant
+        return max(field, key=score_of)
 
     colorful = [c for c in candidates if c["sat"] > 0.1]
     return max(colorful, key=lambda c: c["sat"]) if colorful else NEUTRAL_ACCENT
