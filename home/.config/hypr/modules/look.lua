@@ -116,9 +116,12 @@ if hl.plugin.hyprglass ~= nil then
 
     -- The layers given glass, named one by one so the rest — the wallpaper
     -- daemon's underlay above all — keep Hyprland's blur. The threshold sits
-    -- between the grounds (0.60 and up) and the pill shadows (0.50), so the
-    -- shadows stay matte instead of turning into lenses of their own.
-    hl.plugin.hyprglass.layer("nocturnus-bar",        { mask_threshold = 0.55 })
+    -- between the grounds (0.86) and the pill shadows (0.50), so the shadows
+    -- stay matte instead of turning into lenses of their own. The bar itself
+    -- stays out: it sits under the notch, where window previews and layer
+    -- fades gave the glass a mask to misread, and its own blur rule paints
+    -- the ground well enough.
+    hl.plugin.hyprglass.layer("nocturnus-bar",        { exclude = true })
     hl.plugin.hyprglass.layer("nocturnus-dock",       { mask_threshold = 0.55 })
     hl.plugin.hyprglass.layer("nocturnus-desktop",    { mask_threshold = 0.55 })
     hl.plugin.hyprglass.layer("nocturnus-deck",       { mask_threshold = 0.55 })
