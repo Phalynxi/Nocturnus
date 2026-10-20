@@ -298,12 +298,15 @@ Singleton {
             : Math.max(1, Math.floor(length / stride))
         const columns = count(width)
         const rows = count(height)
+        // The spare width splits evenly, so the columns sit symmetrically on
+        // the board: a widget spanning an even number of cells can then stand
+        // dead centre, under the bar that is centred on the same board.
         return {
             stride: stride,
             columns: columns,
             rows: rows,
-            originX: (width + gutter - columns * stride) / 2,
-            originY: (height + gutter - rows * stride) / 2
+            originX: (width - columns * stride) / 2,
+            originY: (height - rows * stride) / 2
         }
     }
 
