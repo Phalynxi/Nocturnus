@@ -4031,7 +4031,7 @@ def pick_accent(swatches):
 def build_palette(image_path):
     """Derive a full UI palette from the wallpaper's dominant accent."""
     accent = pick_accent(sample_colors(image_path))
-    red, green, blue = accent["r"], accent["g"], accent["b"]
+    ar, ag, ab = accent["r"], accent["g"], accent["b"]
 
     # Semantic colours: keep their hue in colorful images; wash them for monochrome.
     def wash(hexv):
@@ -4045,20 +4045,20 @@ def build_palette(image_path):
         lowest = min(r, g, b)
         return 0 if highest == 0 else (highest - lowest) / highest
 
-    if mono_sat(red, green, blue) < 0.12:
+    if mono_sat(ar, ag, ab) < 0.12:
         # Wash semantic colours for a neutral, grey‑ish palette that respects meaning via lightness.
-        red = wash("#f38ba8")
-        green = wash("#a6e3a1")
-        yellow = wash("#f9e2af")
-        blue = wash("#89b4fa")
+        semantic_red_hex = wash("#f38ba8")
+        semantic_green_hex = wash("#a6e3a1")
+        semantic_yellow_hex = wash("#f9e2af")
+        semantic_blue_hex = wash("#89b4fa")
     else:
-        red = "#f38ba8"
-        green = "#a6e3a1"
-        yellow = "#f9e2af"
-        blue = "#89b4fa"
+        semantic_red_hex = "#f38ba8"
+        semantic_green_hex = "#a6e3a1"
+        semantic_yellow_hex = "#f9e2af"
+        semantic_blue_hex = "#89b4fa"
 
     # Surfaces are near-black, tinted just enough to feel related to the accent.
-    background = (17 + red * 0.04, 19 + green * 0.04, 24 + blue * 0.05)
+    background = (17 + ar * 0.04, 19 + ag * 0.04, 24 + ab * 0.05)
     surface = tuple(channel + 14 for channel in background)
     surface_hover = (surface[0] + 16, surface[1] + 16, surface[2] + 18)
     border = (surface_hover[0] + 16, surface_hover[1] + 16, surface_hover[2] + 20)
@@ -4071,12 +4071,12 @@ def build_palette(image_path):
         "text": "#eef2f7",
         "textMuted": "#94a1b2",
         "accent": accent["hex"],
-        "accentHover": rgb_to_hex(red * 1.15 + 15, green * 1.15 + 15, blue * 1.15 + 15),
-        "accentText": "#11111b" if luminance(red, green, blue) > 0.45 else "#ffffff",
-        "red": red,
-        "green": green,
-        "yellow": yellow,
-        "blue": blue,
+        "accentHover": rgb_to_hex(ar * 1.15 + 15, ag * 1.15 + 15, ab * 1.15 + 15),
+        "accentText": "#11111b" if luminance(ar, ag, ab) > 0.45 else "#ffffff",
+        "red": semantic_red_hex,
+        "green": semantic_green_hex,
+        "yellow": semantic_yellow_hex,
+        "blue": semantic_blue_hex,
     }
 
 
