@@ -576,6 +576,28 @@ ShellRoot {
         }
     }
 
+    // Arranging from outside the shell — scripts set a board straight:
+    //   qs ipc call desk place clock-1 7 0
+    IpcHandler {
+        target: "desk"
+
+        function place(key: string, col: string, row: string): string {
+            if (!key || col === "" || row === "")
+                return "usage: qs ipc call desk place <key> <col> <row>"
+            DesktopService.update(key, { col: parseInt(col), row: parseInt(row) })
+            DesktopService.conform()
+            return `${key} at ${col}×${row}`
+        }
+
+        // The theme row forgets; the widget falls back to the desk's.
+        function theme(key: string, theme: string): string {
+            if (!key)
+                return "usage: qs ipc call desk theme <key> [theme]"
+            DesktopService.update(key, { theme: theme === "" ? null : theme })
+            return theme === "" ? `${key} on the desk's theme` : `${key} on ${theme}`
+        }
+    }
+
     IpcHandler {
         target: "shell"
 
