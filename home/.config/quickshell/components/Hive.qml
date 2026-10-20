@@ -161,11 +161,9 @@ PanelWindow {
             turnAnim.restart()
         }
 
-        // The slide: one full-width travel. The comb glides off with an
-        // easy-in, the stack turns the moment it is clear of the frame, and
-        // the next honeycomb carries the motion home with an ease-out —
-        // chained back to back, so the eye never sees two moves, only the
-        // wax flowing through.
+        // The slide: one short pass. The stack turns first, and the next
+        // honeycomb carries the slide a little way with it — a settle, not
+        // a crossing — then the wave of wax lands it.
         property int drift: 0
         property real transitX: 0
 
@@ -174,20 +172,13 @@ PanelWindow {
         SequentialAnimation {
             id: turnAnim
 
-            NumberAnimation {
-                target: comb
-                property: "transitX"
-                to: comb.drift * -2040
-                duration: 250
-                easing.type: Easing.InQuad
-            }
             ScriptAction { script: comb.page += comb.drift }
             NumberAnimation {
                 target: comb
                 property: "transitX"
-                from: comb.drift * 2040
+                from: comb.drift * 120
                 to: 0
-                duration: 250
+                duration: 260
                 easing.type: Easing.OutCubic
             }
         }
