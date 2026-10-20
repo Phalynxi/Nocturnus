@@ -509,10 +509,12 @@ def is_motion(path):
 
 
 def poster_of(video):
-    """The video's first frame, the still standing in for it, made once.
+    """A sampled frame, the still standing in for the video, made once.
 
-    The video starts on that frame, so the handover from the still does not
-    jump.
+    The frame is picked a way into the clip, not its very first: some
+    wallpapers open on a fade from black, and a poster of nothing paints
+    the picker black. A tenth of the way in gives the scene. The handover
+    from the still may jump a shade; a visible one beats an invisible desk.
     """
     try:
         status = os.stat(video)
@@ -528,7 +530,19 @@ def poster_of(video):
         return ""
     os.makedirs(POSTERS_DIR, exist_ok=True)
     try:
-        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", video, "-frames:v", "1", poster],
+        probe = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "csv=p=0", video],
+            capture_output=True, text=True, timeout=30)
+        length = float(probe.stdout.strip() or 0)
+    except (OSError, subprocess.SubprocessError, ValueError):
+        length = 0.0
+    # A tenth of the way, at least two seconds in, never past four.
+    moment = min(4.0, max(2.0, length * 0.1)) if length > 0 else 2.0
+    try:
+        subprocess.run(["ffmpeg", "-v", "error", "-y",
+                        "-ss", f"{moment:.2f}", "-i", video,
+                        "-frames:v", "1", poster],
                        capture_output=True, timeout=30)
     except (OSError, subprocess.SubprocessError) as error:
         sys.stderr.write(f"ffmpeg failed: {error}\n")
