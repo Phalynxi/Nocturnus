@@ -155,10 +155,9 @@ PanelWindow {
 
         function turn(drift: int): void {
             const at = comb.page + drift
-            if (at < 0 || at >= comb.pages || turnAnim.running)
+            if (at < 0 || at >= comb.pages)
                 return
-            comb.drift = drift
-            turnAnim.restart()
+            comb.page = at
         }
 
         // The desk's own picture, chosen or playing: the cell that matches
@@ -185,36 +184,6 @@ PanelWindow {
 
         // Which cell the mouse is over, or applying, for the label under.
         property int hovered: -1
-
-        // The hive drifts rather than snaps: a page slides out toward the
-        // direction it came from, the stack turns under it, and the next
-        // page settles in from the other side with a touch of back-ease —
-        // wax gliding on wax.
-        property int drift: 0
-        property real transitX: 0
-
-        transform: Translate { x: comb.transitX }
-
-        SequentialAnimation {
-            id: turnAnim
-
-            NumberAnimation {
-                target: comb
-                property: "transitX"
-                to: comb.drift * -90
-                duration: 110
-                easing.type: Easing.OutQuad
-            }
-            ScriptAction { script: comb.page += comb.drift }
-            NumberAnimation {
-                target: comb
-                property: "transitX"
-                from: comb.drift * 90
-                to: 0
-                duration: 150
-                easing.type: Easing.OutCubic
-            }
-        }
 
         Repeater {
             model: comb.pageCells
