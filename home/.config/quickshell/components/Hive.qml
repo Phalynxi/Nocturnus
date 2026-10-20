@@ -145,49 +145,6 @@ PanelWindow {
         // Which cell the mouse is over, or applying, for the label under.
         property int hovered: -1
 
-        // ── WORDMARK ─────────────────────────────────────────────────────────
-        //
-        // Spaced caps above the comb, the count in mono under it. The hive
-        // carries only what it selects; the bar keeps the time.
-        Column {
-            width: parent.width
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.bottom: parent.top
-            anchors.bottomMargin: 30
-            spacing: 3
-
-            Text {
-                width: parent.width
-                horizontalAlignment: Text.AlignHCenter
-                text: "wallpapers".toUpperCase().split("").join(" ")
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSizeSmall
-                color: Theme.textMuted
-            }
-
-            Text {
-                width: parent.width
-                horizontalAlignment: Text.AlignHCenter
-                text: `${comb.page + 1} / ${comb.pages}`
-                font.family: Theme.fontMono
-                font.pixelSize: Theme.fontSizeSmall
-                color: Theme.textMuted
-            }
-        }
-
-        // The hovered or last-touched cell's name, spaced caps, below. One
-        // line — no other words in the hive.
-        Text {
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: parent.bottom
-            anchors.topMargin: 28
-            text: comb.cells[comb.hovered]?.name ?? ""
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
-            font.letterSpacing: 3
-            color: Theme.text
-        }
-
         Repeater {
             model: comb.pageCells
 
@@ -223,10 +180,8 @@ PanelWindow {
 
                 z: cellRoot.hovered || cellRoot.current ? 2 : 1
                 scale: cellRoot.hovered ? 1.06 : 1.0
-                opacity: cellRoot.current ? 1 : (cellRoot.hovered ? 1 : 0.8)
 
                 Behavior on scale { NumberAnimation { duration: Theme.durationFast; easing.type: Easing.OutCubic } }
-                Behavior on opacity { NumberAnimation { duration: Theme.durationFast } }
 
                 // The wax: the picture through the transition preview's own
                 // route, texture into a ShapePath, six edges.
@@ -297,6 +252,8 @@ PanelWindow {
                         WallpaperService.apply(cellRoot.cellData.path)
                     }
                     onEntered: comb.hovered = cellRoot.index
+                    // The wheel drifts the stack from anywhere on the hive.
+                    onWheel: wheel => comb.turn(wheel.angleDelta.y > 0 ? 1 : -1)
                 }
             }
         }
