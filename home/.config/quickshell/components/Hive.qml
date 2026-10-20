@@ -155,9 +155,41 @@ PanelWindow {
 
         function turn(drift: int): void {
             const at = comb.page + drift
-            if (at < 0 || at >= comb.pages)
+            if (at < 0 || at >= comb.pages || turnAnim.running)
                 return
-            comb.page = at
+            comb.drift = drift
+            turnAnim.restart()
+        }
+
+        // The slide: one full-width travel. The comb glides off with an
+        // easy-in, the stack turns the moment it is clear of the frame, and
+        // the next honeycomb carries the motion home with an ease-out —
+        // chained back to back, so the eye never sees two moves, only the
+        // wax flowing through.
+        property int drift: 0
+        property real transitX: 0
+
+        transform: Translate { x: comb.transitX }
+
+        SequentialAnimation {
+            id: turnAnim
+
+            NumberAnimation {
+                target: comb
+                property: "transitX"
+                to: comb.drift * -2040
+                duration: 250
+                easing.type: Easing.InQuad
+            }
+            ScriptAction { script: comb.page += comb.drift }
+            NumberAnimation {
+                target: comb
+                property: "transitX"
+                from: comb.drift * 2040
+                to: 0
+                duration: 250
+                easing.type: Easing.OutCubic
+            }
         }
 
         // The desk's own picture, chosen or playing: the cell that matches
