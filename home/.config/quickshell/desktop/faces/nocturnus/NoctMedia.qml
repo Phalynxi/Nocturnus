@@ -14,6 +14,7 @@ import Quickshell.Widgets
 import "../../../theme"
 import "../../../services"
 import "../../../components"
+import "../analogue"
 import "."
 
 // The cover sits in its own bowl on the left — round, rimmed — and the words

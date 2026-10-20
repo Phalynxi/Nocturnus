@@ -1054,7 +1054,14 @@ Singleton {
     }
 
     function spectrumColour(name: string): color {
-        return name === "palette" ? Theme.accent : Qt.color(name)
+        // `palette` is the desk's accent, but poured into the desk's glass:
+        // a third of the pill ground keeps the bars in the family, and they
+        // stand just off the wallpaper instead of on it.
+        return name === "palette"
+            ? Qt.rgba(Theme.accent.r * 0.65 + Theme.island.r * 0.35,
+                Theme.accent.g * 0.65 + Theme.island.g * 0.35,
+                Theme.accent.b * 0.65 + Theme.island.b * 0.35, 0.88)
+            : Qt.color(name)
     }
 
     function spectrumOf(row: var): var {

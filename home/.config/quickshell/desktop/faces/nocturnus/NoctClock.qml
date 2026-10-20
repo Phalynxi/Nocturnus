@@ -36,7 +36,9 @@ Item {
 
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: Qt.formatTime(clock.date, Locale.ShortFormat)
+            // Minutes, not the locale's seconds: the face beats at a minute,
+            // and a frozen final pair of digits would lie.
+            text: Qt.formatTime(clock.date, "HH:mm")
             textFormat: Text.PlainText
             font.family: Theme.fontDisplay
             font.pixelSize: root.vast ? Theme.fontSizeDisplay * 0.9
