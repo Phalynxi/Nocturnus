@@ -47,11 +47,8 @@ QtObject {
 
     // Any style's ground and rim, for a picture of one that is not chosen.
     function groundOf(style: string): color {
-        // Translucent black over the compositor's blur, not the old tinted
-        // glass. Deliberately deep: anything shallower washes out to the
-        // colour of whatever window sits behind the notch, and the bar
-        // stops being one black family all the time.
-        return style === "glass" ? Qt.rgba(0, 0, 0, 0.86) : root.island
+        // Translucent black over the compositor's blur, not the old tinted glass.
+        return style === "glass" ? Qt.rgba(0, 0, 0, 0.60) : root.island
     }
 
     // The dock's ground. Lighter glass grounds go grey over bright
