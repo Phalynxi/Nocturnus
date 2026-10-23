@@ -4058,10 +4058,10 @@ def build_palette(image_path):
         semantic_blue_hex = "#89b4fa"
 
     # Surfaces are near-black, tinted just enough to feel related to the accent.
-    background = (17 + ar * 0.04, 19 + ag * 0.04, 24 + ab * 0.05)
-    surface = tuple(channel + 14 for channel in background)
-    surface_hover = (surface[0] + 16, surface[1] + 16, surface[2] + 18)
-    border = (surface_hover[0] + 16, surface_hover[1] + 16, surface_hover[2] + 20)
+    background = (12 + ar * 0.04, 14 + ag * 0.04, 18 + ab * 0.05)
+    surface = tuple(channel + 10 for channel in background)
+    surface_hover = (surface[0] + 14, surface[1] + 14, surface[2] + 14)
+    border = (surface_hover[0] + 14, surface_hover[1] + 14, surface_hover[2] + 14)
 
     return {
         "background": rgb_to_hex(*background),
