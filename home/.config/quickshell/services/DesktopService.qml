@@ -1318,7 +1318,7 @@ Singleton {
     // any literal in `Qt.color()`.
     function inkFor(widget: var): var {
         const ink = {
-            ground: Theme.island, border: Theme.veilLineOf(Theme.deskStyle),
+            ground: Theme.surface, border: Theme.veilLineOf(Theme.deskStyle),
             text: Theme.text, muted: Theme.textMuted,
             accent: Theme.accent, accentText: Theme.accentText,
             raised: Theme.veilHoverOf(Theme.deskStyle), dim: Theme.indicatorDim,

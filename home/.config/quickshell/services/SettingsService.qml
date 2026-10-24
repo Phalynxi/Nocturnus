@@ -491,7 +491,7 @@ Singleton {
         // shell's under the bar and the dock, and under the desk's widgets.
         property bool windowShadow: false
         property bool barShadow: false
-        property bool widgetShadow: false
+        property bool widgetShadow: true
 
         // hyprglass. Dimmed in the settings when the plugin is not built;
         // `CompositorService` pushes it at login and after every reload.
