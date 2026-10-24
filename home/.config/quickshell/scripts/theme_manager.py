@@ -3936,17 +3936,38 @@ def saturation(red, green, blue):
 
 
 def sample_colors(image_path):
-    """Quantize the image down to a handful of representative colors."""
+    """Quantize the image to representative colors with frequency weighting.
+
+    Returns a list of dicts: ``{"hex": "#RRGGBB", "count": pixels}``.
+
+    The pixel count lets :func:`pick_accent` distinguish a dominant hue
+    from a small highlight (for instance, red lava on a dark volcano).
+    """
     magick = shutil.which("magick") or shutil.which("convert")
     if not magick:
         return []
-    command = [magick, image_path, "-resize", "120x120", "-colors", "24", "-unique-colors", "txt:-"]
+    command = [magick, image_path, "-resize", "120x120", "-colors", "24",
+               "-format", "%c %[hex]\\n", "histogram:info:-"]
     try:
-        result = subprocess.run(command, capture_output=True, text=True, timeout=20)
+        result = subprocess.run(command, capture_output=True, text=True, timeout=30)
     except (OSError, subprocess.SubprocessError) as error:
         sys.stderr.write(f"Color extraction failed: {error}\n")
         return []
-    return re.findall(r"#[0-9A-Fa-f]{6}", result.stdout)
+    # Histogram lines look like:  ``228: (r,g,b) #2E5A50 srgb(...)``
+    line_re = re.compile(r"^\s*(\d+)\s*:\s*\([^)]+\)\s+(#?[0-9A-Fa-f]+)")
+    swatches = []
+    for line in result.stdout.splitlines():
+        match = line_re.match(line)
+        if not match:
+            continue
+        count = int(match.group(1))
+        hex_val = match.group(2).upper()
+        if not hex_val.startswith("#"):
+            hex_val = "#" + hex_val
+        if len(hex_val) > 7:  # strip alpha down to 6 hex digits
+            hex_val = hex_val[:7]
+        swatches.append({"hex": hex_val, "count": count})
+    return swatches
 
 
 def hue_of(red, green, blue):
@@ -3981,42 +4002,69 @@ def accent_penalty(hue, sat, lum):
     return 0.0
 
 
-def pick_accent(swatches):
-    """Prefer a saturated mid-tone; those read as an accent at small sizes.
+def pick_accent(swatches, prefer="balanced"):
+    """Choose an accent color, weighting by how common it actually is.
 
-    The score weighs saturation and a calm lightness, then deducts for the
-    hues that never look deliberate — the mustards and the muds. A hue
-    under deduction only takes the chair when nothing clean is on offer:
-    a picture of lemons keeps its lemons out of the accent chair and
-    gives the desk its greens instead.
+    ``prefer`` controls the trade-off between saturation and frequency:
+
+    ``vibrant``  — maximise saturation (legacy behaviour).
+    ``balanced`` — favour frequent hues, penalise tiny bright highlights like
+        red lava against a dark volcano.  This is the default.
+    ``subtle``   — push saturation down further, lean hard on frequency.
+
+    For a volcano scene whose red lava is a small bright patch, ``balanced``
+    and ``subtle`` will pick a darker, more frequent tone instead.
     """
     if not swatches:
         return NEUTRAL_ACCENT
 
-    # A picture without real colour — ink drawings, monochrome photography —
-    # drinks a neutral: its loudest swatch is compression noise, and losing
-    # that race would dye a grey picture with some accidental blue.
-    if max(saturation(*hex_to_rgb(value)) for value in swatches) < 0.30:
-        return NEUTRAL_ACCENT
+    total = sum(s.get("count", 0) if isinstance(s, dict) else 0 for s in swatches) or 1
 
     candidates = []
-    for value in swatches:
-        red, green, blue = hex_to_rgb(value)
+    for swatch in swatches:
+        hex_val = swatch.get("hex", "") if isinstance(swatch, dict) else swatch
+        red, green, blue = hex_to_rgb(hex_val)
+        count = swatch.get("count", 0) if isinstance(swatch, dict) else 0
+        weight = count / total
         candidates.append({
-            "hex": value.upper(),
+            "hex": hex_val.upper(),
             "r": red, "g": green, "b": blue,
             "lum": luminance(red, green, blue),
             "sat": saturation(red, green, blue),
             "hue": hue_of(red, green, blue),
+            "weight": weight,
         })
 
-    vibrant = [c for c in candidates if c["sat"] > 0.2 and 0.2 < c["lum"] < 0.85]
+    # A picture without real colour — ink drawings, monochrome photography —
+    # drinks a neutral: its loudest swatch is compression noise, and losing
+    # that race would dye a grey picture with some accidental blue.
+    if max(c["sat"] for c in candidates) < 0.30:
+        return NEUTRAL_ACCENT
 
     def score_of(c):
         deduction = accent_penalty(c["hue"], c["sat"], c["lum"])
-        return (c["sat"] * 1.4
-                + (1.0 - abs(c["lum"] - 0.55)) * 0.6
+        lum_score = 1.0 - abs(c["lum"] - 0.40)
+        freq_weight = 4.0 if prefer == "subtle" else 3.0
+        frequency_bonus = c["weight"] * freq_weight
+        # Penalise very bright colours unless they are actually common.
+        bright_penalty = 0.0
+        if c["lum"] > 0.75 and c["weight"] < 0.05:
+            bright_penalty = (c["lum"] - 0.75) * 3
+        # Penalise rare hot colours (a tiny saturated patch — e.g. red lava
+        # on a dark volcano) so frequency can win out.
+        rare_hot_penalty = 0.0
+        if c["weight"] < 0.03 and c["sat"] > 0.55:
+            rare_hot_penalty = (c["sat"] - 0.55) * 5
+        sat_weight = 1.6 if prefer == "vibrant" else 1.2
+        lum_weight = 0.6 if prefer == "vibrant" else 0.4
+        return (c["sat"] * sat_weight
+                + lum_score * lum_weight
+                + frequency_bonus
+                - bright_penalty
+                - rare_hot_penalty
                 - deduction)
+
+    vibrant = [c for c in candidates if c["sat"] > 0.2 and 0.08 < c["lum"] < 0.90]
 
     if vibrant:
         clean = [c for c in vibrant if accent_penalty(
