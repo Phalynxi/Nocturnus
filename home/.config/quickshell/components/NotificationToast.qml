@@ -5,53 +5,59 @@
 // │                                                                          │
 // │   github.com/Phalynxi/Nocturnus                                          │
 // │                                                                          │
-// ╰──────────────────────────────────────────────────────────────────────────╯
+// ╰──────────────────────────────────────────────────────────────────────────╙
 
 import QtQuick
+import QtQuick.Window
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Hyprland
+import Quickshell.Services.Notifications
 
 import "../theme"
 import "../services"
 import "../bar/island"
 
-// Floating toast that pops above the windows, anchored to the top‑right of
-// the focused screen — the same chrome as the island's NotificationLayer,
-// just freed from the bar's real estate.
+// Floating toast that pops above the windows, top‑right of the screen.
+// Same chrome as the island's NotificationLayer, just freed from the bar.
 PanelWindow {
     id: root
 
-    // Follows the focused monitor; falls back to the primary screen.
-    screen: HyprlandService.focusedMonitor
-        ? (Quickshell.screens.find(s => s.name === HyprlandService.focusedMonitor)
-           ?? Quickshell.primaryScreen)
-        : Quickshell.primaryScreen
-
-    // Top‑right, just under the bar's airspace.
     anchors.top: true
     anchors.right: true
-    anchors.topMargin: SettingsService.barHeight + SettingsService.barMargin
-    anchors.rightMargin: 16
 
     width: NotificationService.toastWidth
     height: NotificationService.toastHeight
 
     color: "transparent"
-
     WlrLayershell.namespace: "nocturnus-toast"
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+    WlrLayershell.exclusiveZone: 0
 
-    visible: NotificationService.active && !SettingsService.doNotDisturb
-        || NotificationService.critical
+    visible: ((NotificationService.active && !SettingsService.doNotDisturb)
+        || NotificationService.critical)
 
-    // Reuse the island's chrome: picture, title, body, buttons.
+    // Offset below the bar.
+    x: Screen.width - width - 16
+    y: SettingsService.barHeight + SettingsService.barMargin
+
     NotificationLayer {
         anchors.fill: parent
-    }
 
-    // Fade in / out with arrival and dismissal.
-    opacity: root.visible ? 1 : 0
-    Behavior on opacity { NumberAnimation { duration: Theme.durationFast } }
+        opacity: root.visible ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: Theme.durationFast } }
+
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            onClicked: event => {
+                if (event.button === Qt.LeftButton
+                    && NotificationService.defaultAction(root.notification))
+                    NotificationService.invoke(
+                        NotificationService.defaultAction(root.notification))
+                else
+                    NotificationService.close()
+            }
+        }
+    }
 }
