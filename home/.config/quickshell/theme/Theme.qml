@@ -51,17 +51,17 @@ QtObject {
 
     // Any style's ground and rim, for a picture of one that is not chosen.
     function groundOf(style: string): color {
-        // The accent, sunk to a dark wash, over the compositor's blur.
-        return style === "glass" ? Qt.rgba(root.accent.r * 0.16,
-            root.accent.g * 0.16, root.accent.b * 0.16, 0.66) : root.island
+        // More translucent, frosty glass over the compositor's blur.
+        return style === "glass" ? Qt.rgba(root.accent.r * 0.08,
+            root.accent.g * 0.08, root.accent.b * 0.08, 0.4) : root.island
     }
 
     // The dock's ground. Lighter glass grounds go grey over bright
     // wallpapers, and the capsule stops reading as part of the desk's dark
     // family, so the dock drinks deeper than the bar's ground.
     function dockGroundOf(style: string): color {
-        return style === "glass" ? Qt.rgba(root.accent.r * 0.13,
-            root.accent.g * 0.13, root.accent.b * 0.13, 0.88) : root.island
+        return style === "glass" ? Qt.rgba(root.accent.r * 0.08,
+            root.accent.g * 0.08, root.accent.b * 0.08, 0.5) : root.island
     }
     function rimOf(style: string): color {
         // No border on the glass look; shadows carry the edge.
