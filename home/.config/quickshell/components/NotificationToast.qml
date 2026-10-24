@@ -5,10 +5,9 @@
 // │                                                                          │
 // │   github.com/Phalynxi/Nocturnus                                          │
 // │                                                                          │
-// ╰──────────────────────────────────────────────────────────────────────────╙
+// ╰──────────────────────────────────────────────────────────────────────────┙
 
 import QtQuick
-import QtQuick.Window
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Services.Notifications
@@ -22,11 +21,11 @@ import "../bar/island"
 PanelWindow {
     id: root
 
+    // Full‑screen surface — content is positioned inside (like Dock, Hive).
     anchors.top: true
+    anchors.bottom: true
+    anchors.left: true
     anchors.right: true
-
-    width: NotificationService.toastWidth
-    height: NotificationService.toastHeight
 
     color: "transparent"
     WlrLayershell.namespace: "nocturnus-toast"
@@ -37,27 +36,18 @@ PanelWindow {
     visible: ((NotificationService.active && !SettingsService.doNotDisturb)
         || NotificationService.critical)
 
-    // Offset below the bar.
-    x: Screen.width - width - 16
-    y: SettingsService.barHeight + SettingsService.barMargin
-
+    // ── THE TOAST ──────────────────────────────────────────────────────────
     NotificationLayer {
-        anchors.fill: parent
+        id: toast
+
+        width: NotificationService.toastWidth
+        height: NotificationService.toastHeight
+
+        // Top‑right, just under the bar's airspace.
+        x: root.width - width - 16
+        y: SettingsService.barHeight + SettingsService.barMargin
 
         opacity: root.visible ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: Theme.durationFast } }
-
-        MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.LeftButton | Qt.RightButton
-            onClicked: event => {
-                if (event.button === Qt.LeftButton
-                    && NotificationService.defaultAction(root.notification))
-                    NotificationService.invoke(
-                        NotificationService.defaultAction(root.notification))
-                else
-                    NotificationService.close()
-            }
-        }
     }
 }
