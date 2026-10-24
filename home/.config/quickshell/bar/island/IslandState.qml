@@ -60,10 +60,10 @@ QtObject {
     readonly property string layer: {
         if (!root.active)
             return root.layerModules
+        // Notifications no longer steal the island; they float as toasts.
+        // (The layer kept for backwards-compat is never reached.)
         if (root.openPanel !== "")
             return root.layerPanel
-        if (NotificationService.active)
-            return root.layerNotification
         if (root.transientActive)
             return root.layerOsd
         if (root.summary)

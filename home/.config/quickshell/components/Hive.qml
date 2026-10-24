@@ -149,10 +149,10 @@ PanelWindow {
         readonly property var cells: comb.stills.concat(comb.moving)
 
         // The hive drifts: the folder holds hundreds, so the comb shows a
-        // page at a time and the wheel walks the stack. Twenty-one cells —
-        // three staggered rows of seven — fit under the bar's airspace.
+        // page at a time and the wheel walks the stack. Twenty-eight cells —
+        // four staggered rows of seven — sit uniform under the bar's airspace.
         property int page: 0
-        readonly property int perPage: 21
+        readonly property int perPage: 28
         readonly property int pages: Math.max(1, Math.ceil(comb.cells.length / comb.perPage))
         readonly property var pageCells: comb.cells.slice(
             comb.page * comb.perPage, (comb.page + 1) * comb.perPage)
@@ -368,7 +368,12 @@ PanelWindow {
                 // and a small sigil marks it — a play wedge in wax-white.
                 Shape {
                     visible: cellRoot.cellData.motion
-                    anchors.centerIn: parent
+                    // Anchored from the bottom so the comb grows upward — the fourth row
+        // hangs above the third, keeping the honeycomb bottom-aligned and the
+        // airspace under the bar clear.
+         anchors.left: parent
+         anchors.bottom: parent
+         anchors.bottomMargin: SettingsService.barHeight + SettingsService.barMargin + 8
                     width: 46
                     height: 46
 

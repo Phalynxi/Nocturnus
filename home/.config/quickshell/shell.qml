@@ -213,6 +213,11 @@ ShellRoot {
         id: hive
     }
 
+    // Floating notification toast, above the windows rather than in the bar.
+    NotificationToast {
+        id: notificationToast
+    }
+
     SettingsWindow {
         id: settingsWindow
 
