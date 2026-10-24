@@ -43,6 +43,7 @@ Singleton {
     readonly property alias chipFigure: config.chipFigure
     readonly property alias desktopWidgets: config.desktopWidgets
     readonly property alias desktopTheme: config.desktopTheme
+    readonly property alias accentMode: config.accentMode
     readonly property alias desktopOpacity: config.desktopOpacity
     readonly property alias desktopHidden: config.desktopHidden
     readonly property alias centreButtons: config.centreButtons
@@ -693,6 +694,12 @@ Singleton {
         // `DesktopService.themes`. Colours always come from the palette, and
         // the capsule's ground is the island's (`surfaceStyle`).
         property string desktopTheme: "modern"
+
+        // How the wallpaper's accent is chosen: "vibrant" picks the most
+        // saturated colour (legacy); "balanced" weighs frequency and lightly
+        // penalises tiny highlights like red lava on a dark volcano; "subtle"
+        // leans further into frequency for muted, recessive accents.
+        property string accentMode: "balanced"
 
         // Capsule opacity in percent; below 100 the desktop layer's blur
         // rule (`windowrules.lua`) shows through. Widgets may override it.

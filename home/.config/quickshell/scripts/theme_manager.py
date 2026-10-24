@@ -4076,9 +4076,31 @@ def pick_accent(swatches, prefer="balanced"):
     return max(colorful, key=lambda c: c["sat"]) if colorful else NEUTRAL_ACCENT
 
 
-def build_palette(image_path):
-    """Derive a full UI palette from the wallpaper's dominant accent."""
-    accent = pick_accent(sample_colors(image_path))
+def read_accent_mode():
+    """Read the ``accentMode`` preference from the shell's settings.json.
+
+    Returns ``balanced`` when the file or key is missing.
+    """
+    try:
+        with open(SHELL_SETTINGS_FILE, "r", encoding="utf-8") as handle:
+            data = json.load(handle)
+        mode = data.get("accentMode", "balanced")
+        if mode not in ("vibrant", "balanced", "subtle"):
+            return "balanced"
+        return mode
+    except (OSError, json.JSONDecodeError):
+        return "balanced"
+
+
+def build_palette(image_path, mode=None):
+    """Derive a full UI palette from the wallpaper's dominant accent.
+
+    ``mode`` overrides the user's ``accentMode`` setting (see
+    :func:`read_accent_mode`). When ``None``, the setting is read from disk.
+    """
+    if mode is None:
+        mode = read_accent_mode()
+    accent = pick_accent(sample_colors(image_path), prefer=mode)
     ar, ag, ab = accent["r"], accent["g"], accent["b"]
 
     # Semantic colours: keep their hue in colorful images; wash them for monochrome.
