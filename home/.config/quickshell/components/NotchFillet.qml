@@ -18,7 +18,7 @@ import "../theme"
 Item {
     id: root
 
-    property color color: Theme.islandGround
+    property color color: Theme.surface
     // Mirrored, for the notch's left side.
     property bool mirrored: false
     // How far down the glass's light from the top reaches in the shape the

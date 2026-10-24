@@ -26,7 +26,7 @@ ClippingRectangle {
     implicitWidth: Math.round(60 * root.factor)
     implicitHeight: Math.round(40 * root.factor)
     radius: Theme.radiusSmall
-    color: Theme.island
+    color: Theme.surface
 
     Image {
         id: wallpaper

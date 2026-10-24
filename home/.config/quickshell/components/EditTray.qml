@@ -175,7 +175,7 @@ Item {
         height: Math.min(root.span(root.shownRows, root.strideY) + 2 * root.pad,
             Math.max(2 * root.pad, root.height - 2 * Theme.desktopGutter))
         radius: Theme.radiusLarge
-        color: Theme.island
+        color: Theme.surface
         border.color: root.receiving ? Theme.accent : Theme.borderIn(QsWindow.window)
         border.width: root.receiving ? 2 : 1
 
@@ -251,7 +251,7 @@ Item {
                 height: root.pad
                 visible: mosaic.y < 0
                 gradient: Gradient {
-                    GradientStop { position: 0; color: Theme.island }
+                    GradientStop { position: 0; color: Theme.surface }
                     GradientStop { position: 1; color: Qt.rgba(Theme.island.r, Theme.island.g, Theme.island.b, 0) }
                 }
             }
@@ -264,7 +264,7 @@ Item {
                 visible: -mosaic.y < viewport.overflow
                 gradient: Gradient {
                     GradientStop { position: 0; color: Qt.rgba(Theme.island.r, Theme.island.g, Theme.island.b, 0) }
-                    GradientStop { position: 1; color: Theme.island }
+                    GradientStop { position: 1; color: Theme.surface }
                 }
             }
 
@@ -366,7 +366,7 @@ Item {
             width: 24
             height: 24
             radius: 12
-            color: Theme.island
+            color: Theme.surface
             border.color: carry.active ? Theme.accent : Theme.borderIn(QsWindow.window)
             border.width: carry.active ? 2 : 1
 
@@ -420,7 +420,7 @@ Item {
             width: 24
             height: 24
             radius: 12
-            color: Theme.island
+            color: Theme.surface
             border.color: stretch.active ? Theme.accent : Theme.borderIn(QsWindow.window)
             border.width: stretch.active ? 2 : 1
 

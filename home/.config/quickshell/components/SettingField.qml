@@ -54,7 +54,7 @@ Item {
             Layout.preferredHeight: 30
             Layout.alignment: Qt.AlignVCenter
             radius: Theme.radiusSmall
-            color: Theme.island
+            color: Theme.surface
             border.color: input.activeFocus ? Theme.accent : Theme.borderIn(QsWindow.window)
             border.width: 1
 
