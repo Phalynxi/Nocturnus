@@ -191,7 +191,11 @@ PanelWindow {
         // wears the accent.
         readonly property string pickCurrent: WallpaperService.chosen
 
-        readonly property int rows: Math.max(1, Math.ceil(comb.pageCells.length / comb.perRow))
+        // Four rows always — the comb never shrinks on a short page; cells
+        // land at the bottom and the empty rows stay invisible.
+        readonly property int rows: Math.max(1, Math.ceil(comb.perPage / comb.perRow))
+        readonly property int filledRows: Math.max(1, Math.ceil(comb.pageCells.length / comb.perRow))
+        readonly property real rowOffset: (comb.rows - comb.filledRows) * comb.radius * 1.5
         readonly property real spanX: comb.perRow * comb.side + comb.pad * 2
             + (comb.rows > 1 ? comb.side / 2 : 0)
         readonly property real spanY: (comb.rows - 1) * comb.radius * 1.5
@@ -199,7 +203,11 @@ PanelWindow {
         width: comb.spanX
         height: comb.spanY
 
-        anchors.centerIn: parent
+        // Bottom‑anchored so the comb fills four rows from the bottom up;
+        // short pages leave invisible rows at the top instead of riding high.
+        anchors.horizontalCenter: parent
+        anchors.bottom: parent
+        anchors.bottomMargin: SettingsService.barHeight + SettingsService.barMargin + 8
 
         opacity: root.open ? 1 : 0
         scale: root.open ? 1 : 0.92
@@ -368,12 +376,7 @@ PanelWindow {
                 // and a small sigil marks it — a play wedge in wax-white.
                 Shape {
                     visible: cellRoot.cellData.motion
-                    // Anchored from the bottom so the comb grows upward — the fourth row
-        // hangs above the third, keeping the honeycomb bottom-aligned and the
-        // airspace under the bar clear.
-         anchors.left: parent
-         anchors.bottom: parent
-         anchors.bottomMargin: SettingsService.barHeight + SettingsService.barMargin + 8
+                    anchors.centerIn: parent
                     width: 46
                     height: 46
 
@@ -455,7 +458,7 @@ PanelWindow {
     }
 
     function yFor(cell: Item): real {
-        return comb.pad + cell.row * comb.radius * 1.5
+        return comb.pad + comb.rowOffset + cell.row * comb.radius * 1.5
     }
 
     Shortcut {
