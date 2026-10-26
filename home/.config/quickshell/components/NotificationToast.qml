@@ -25,6 +25,11 @@ PanelWindow {
     // glass style, and the compositor's blur is asked for by the window's
     // namespace (`hyprglass.layer` on `nocturnus-toast`, in Hyprland's look).
     readonly property bool glassy: true
+    // A fullscreen window anywhere: notifications duck under it, since the
+    // toast's mapped window otherwise pulls focus mid-fight (Realm of games
+    // included — a pilfered frame is a lost fight).
+    readonly property bool fullscreen: HyprlandService.clients.some(
+        client => (client.fullscreen ?? 0) >= 2)
 
     // Full‑screen surface — content is positioned inside (like Dock, Hive).
     anchors.top: true
@@ -38,8 +43,7 @@ PanelWindow {
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
     WlrLayershell.exclusiveZone: 0
 
-    visible: ((NotificationService.active && !SettingsService.doNotDisturb)
-        || NotificationService.critical)
+    visible: true
 
     // ── THE TOAST ──────────────────────────────────────────────────────────
     // The island draws NotificationLayer inside its own chrome; the toast
@@ -61,7 +65,7 @@ PanelWindow {
         x: root.width - width - 16
         y: SettingsService.barHeight + SettingsService.barMargin
 
-        opacity: root.visible ? 1 : 0
+        opacity: (NotificationService.active && !root.fullscreen) || NotificationService.critical ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: Theme.durationFast } }
 
         // The island loads the layer inside its own padding, standing in for
