@@ -7,7 +7,8 @@
 // │                                                                          │
 // ╰──────────────────────────────────────────────────────────────────────────╯
 
-import QtQuick
+import QtQuick 2.15
+import QtGraphicalEffects 1.15
 
 import "."
 
@@ -59,7 +60,12 @@ Item {
         layer.enabled: true
     }
 
-    
+    OpacityMask {
+        anchors.fill: picture
+        source: picture
+        maskSource: disc
+        visible: root.hasPicture
+    }
 
     Text {
         anchors.centerIn: parent

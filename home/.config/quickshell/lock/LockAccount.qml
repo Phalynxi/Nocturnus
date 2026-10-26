@@ -90,14 +90,13 @@ Item {
                 : root.inset + root.face + 14 + resting.implicitWidth + 26
             height: root.pillHeight
             radius: Theme.radiusPill
-            // Pure black, like the island: over a photograph only an opaque
-            // capsule reads as a surface.
-            color: Theme.island
+            // The island's ground: glass over the blurred desktop, or solid.
+            color: Theme.islandGround
             border.width: 1
             border.color: {
                 if (LockService.failed)
                     return Theme.indicatorBad
-                return root.typing ? Theme.accent : Theme.islandBorder
+                return root.typing ? Theme.accent : Theme.veilLineOf(Theme.surfaceStyle)
             }
 
             Behavior on width {

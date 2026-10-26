@@ -9,7 +9,7 @@
 
 pragma Singleton
 
-import QtQuick
+import QtQuick 2.15
 
 // Fixed tokens: the greeter runs before any user's palette applies. Values
 // match the shell's fixed island colours and its default accent.
@@ -19,10 +19,11 @@ QtObject {
     // ── COLOUR ──────────────────────────────────────────────────────────────
 
     // The shell's capsule colours.
-    readonly property color island: "#000000"
-    readonly property color islandSurface: "#141414"
-    readonly property color islandSurfaceHover: "#1f1f1f"
-    readonly property color islandBorder: "#262626"
+readonly property color island: "#47141420"             // glass fill (~28% tinted)
+readonly property color islandSurface: "#33ffffff"
+readonly property color islandSurfaceHover: "#4dffffff"
+readonly property color islandBorder: "#2effffff"       // light rim
+readonly property color glassSheen: "#12ffffff"
 
     readonly property color text: "#ffffff"
     readonly property color textMuted: "#8e8e93"
@@ -53,7 +54,7 @@ QtObject {
     // the first family in the stack that exists.
     readonly property var installedFonts: Qt.fontFamilies()
 
-    function fontOf(stack: string): string {
+    function fontOf(stack) {
         const names = stack.split(",")
         for (const name of names) {
             const family = name.trim()

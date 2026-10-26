@@ -7,8 +7,8 @@
 // │                                                                          │
 // ╰──────────────────────────────────────────────────────────────────────────╯
 
-import QtQuick
-import QtQuick.Shapes
+import QtQuick 2.15
+import QtQuick.Shapes 1.15
 
 import "."
 
@@ -73,7 +73,7 @@ Item {
 
     property string battery: ""
 
-    function read(name: string, file: string, done: var): void {
+    function read(name, file, done) {
         const request = new XMLHttpRequest()
         request.onreadystatechange = function () {
             if (request.readyState !== XMLHttpRequest.DONE)
@@ -84,7 +84,7 @@ Item {
         request.send()
     }
 
-    function refresh(): void {
+    function refresh() {
         if (root.battery === "") {
             for (const name of ["BAT0", "BAT1", "BAT2"]) {
                 root.read(name, "capacity", function (value) {
@@ -123,7 +123,7 @@ Item {
         anchors.fill: parent
         // The curve renderer antialiases the sweep properly; the default one
         // leaves a visibly stepped edge at this size.
-        preferredRendererType: Shape.CurveRenderer
+        antialiasing: true
 
         ShapePath {
             strokeWidth: root.thickness

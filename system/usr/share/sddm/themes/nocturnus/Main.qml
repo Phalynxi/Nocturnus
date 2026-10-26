@@ -8,6 +8,7 @@
 // ╰──────────────────────────────────────────────────────────────────────────╯
 
 import QtQuick 2.15
+import QtGraphicalEffects 1.15
 
 import "components"
 
@@ -30,23 +31,29 @@ Rectangle {
     // painting is bright strokes edge to edge, and black capsules on a bright
     // ground read as holes.
 
-    Image {
-        id: painting
+Image {
+    id: painting
+    anchors.fill: parent
+    source: "background.jpg"          // relative to this file, not a hardcoded /usr/share path
+    fillMode: Image.PreserveAspectCrop
+    visible: false
+    sourceSize.width: root.width
+    sourceSize.height: root.height
+}
 
-        anchors.fill: parent
-        source: "file:///usr/share/sddm/themes/nocturnus/background.jpg"
-        fillMode: Image.PreserveAspectCrop
-        asynchronous: false
-        cache: true
-        visible: false
-        sourceSize.width: root.width
-        sourceSize.height: root.height
-    }
+GaussianBlur {
+    anchors.fill: parent
+    source: painting
+    radius: 24
+    samples: 49
+    transparentBorder: false
+}
 
-    Rectangle {
-        anchors.fill: parent
-        color: "transparent"
-    }
+Rectangle {
+    anchors.fill: parent
+    color: "black"
+    opacity: 0.45                     // the darkening your comment describes
+}
 
     // ── STATE ───────────────────────────────────────────────────────────────
 

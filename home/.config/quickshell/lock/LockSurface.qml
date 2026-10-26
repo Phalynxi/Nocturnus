@@ -124,8 +124,8 @@ Item {
 
     // ── STATUS ──────────────────────────────────────────────────────────────
 
-    // A ring chip as on the bar, in the bar's corner: pure black with no
-    // border, since the ring is the outline.
+    // A ring chip as on the bar, in the bar's corner: the island's ground
+    // with no border, since the ring is the outline.
     Rectangle {
         anchors.right: parent.right
         anchors.rightMargin: 10
@@ -134,7 +134,7 @@ Item {
         width: Theme.capsuleHeight
         height: Theme.capsuleHeight
         radius: Theme.radiusPill
-        color: Theme.island
+        color: Theme.islandGround
         visible: BatteryService.available
         opacity: root.held
 

@@ -7,8 +7,8 @@
 // │                                                                          │
 // ╰──────────────────────────────────────────────────────────────────────────╯
 
-import QtQuick
-import QtQuick.Shapes
+import QtQuick 2.15
+import QtQuick.Shapes 1.15
 
 import "."
 
@@ -27,7 +27,7 @@ Item {
         id: arc
 
         anchors.fill: parent
-        preferredRendererType: Shape.CurveRenderer
+        antialiasing: true
 
         ShapePath {
             strokeColor: root.fillColor
