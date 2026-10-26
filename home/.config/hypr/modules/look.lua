@@ -127,6 +127,8 @@ if hl.plugin.hyprglass ~= nil then
     hl.plugin.hyprglass.layer("nocturnus-deck",       { mask_threshold = 0.55 })
     hl.plugin.hyprglass.layer("nocturnus-launcher",   { mask_threshold = 0.55 })
     hl.plugin.hyprglass.layer("nocturnus-wallpapers", { mask_threshold = 0.55 })
+    -- The notification toast: a pill of its own in the glass family.
+    hl.plugin.hyprglass.layer("nocturnus-toast",      { mask_threshold = 0.55 })
 end
 
 

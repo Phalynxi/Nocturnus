@@ -8,7 +8,6 @@
 // ╰──────────────────────────────────────────────────────────────────────────╯
 
 import QtQuick
-import QtQuick.Effects
 
 import "."
 
@@ -60,13 +59,7 @@ Item {
         layer.enabled: true
     }
 
-    MultiEffect {
-        anchors.fill: picture
-        source: picture
-        maskEnabled: true
-        maskSource: disc
-        visible: root.hasPicture
-    }
+    
 
     Text {
         anchors.centerIn: parent

@@ -7,8 +7,7 @@
 // │                                                                          │
 // ╰──────────────────────────────────────────────────────────────────────────╯
 
-import QtQuick
-import QtQuick.Effects
+import QtQuick 2.15
 
 import "components"
 
@@ -35,7 +34,7 @@ Rectangle {
         id: painting
 
         anchors.fill: parent
-        source: "background.jpg"
+        source: "file:///usr/share/sddm/themes/nocturnus/background.jpg"
         fillMode: Image.PreserveAspectCrop
         asynchronous: false
         cache: true
@@ -44,14 +43,9 @@ Rectangle {
         sourceSize.height: root.height
     }
 
-    MultiEffect {
+    Rectangle {
         anchors.fill: parent
-        source: painting
-        blurEnabled: true
-        blur: 1
-        blurMax: 64
-        brightness: -0.28
-        saturation: -0.15
+        color: "transparent"
     }
 
     // ── STATE ───────────────────────────────────────────────────────────────
@@ -61,7 +55,7 @@ Rectangle {
     property string message: ""
     property bool opened: false
 
-    function attempt(password: string): void {
+    function attempt(password) {
         if (root.authenticating)
             return
         root.authenticating = true
@@ -73,20 +67,20 @@ Rectangle {
     Connections {
         target: sddm
 
-        function onLoginSucceeded(): void {
+        function onLoginSucceeded() {
             root.authenticating = false
             root.message = ""
             root.opened = true
         }
 
         // The field clears itself; clearing it here would fight its shake.
-        function onLoginFailed(): void {
+        function onLoginFailed() {
             root.authenticating = false
             root.failed = true
             root.message = qsTr("Wrong password")
         }
 
-        function onInformationMessage(message: string): void {
+        function onInformationMessage(message) {
             root.message = message
         }
     }
@@ -101,12 +95,12 @@ Rectangle {
         NumberAnimation { duration: Theme.durationMorph; easing.type: Theme.easing }
     }
 
-    function rouse(): void {
+    function rouse() {
         root.awake = true
         drowse.restart()
     }
 
-    function rest(): void {
+    function rest() {
         drowse.stop()
         account.expanded = false
         session.expanded = false
@@ -166,14 +160,7 @@ Rectangle {
         scale: 1 - 0.1 * root.stage
         transformOrigin: Item.Top
 
-        layer.enabled: true
-        layer.effect: MultiEffect {
-            shadowEnabled: true
-            shadowBlur: 1
-            shadowOpacity: 0.45
-            shadowVerticalOffset: 3
-            shadowColor: Theme.island
-        }
+        layer.enabled: false
 
         Clock {
             id: clock
