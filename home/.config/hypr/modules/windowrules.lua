@@ -73,13 +73,13 @@ hl.window_rule({
 })
 
 
--- · Vesktop wears the glass look too: the theme paints translucent panes,
---   and the window itself fades so the wallpaper shows through them.
+-- · Vesktop should not be translucent: make windows opaque so streams are visible
+
 hl.window_rule({
     name  = "vesktop-translucent",
     match = { class = "^(vesktop|Vesktop)$" },
 
-    opacity = "0.88 0.88",
+    opacity = "1.0 1.0",
 })
 
 
