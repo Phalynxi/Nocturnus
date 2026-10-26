@@ -402,6 +402,12 @@ CAVA_GRADIENT_DIM = 0.60
 # wants it (hyprlock run by hand, for example).
 CURRENT_WALLPAPER_LINK = os.path.join(STATE_DIR, "current-wallpaper")
 
+# The SDDM greeter cannot read from $HOME (and its config may be 0700), so the
+# theme ships a static background.jpg. This updates it from the current poster
+# so the login screen matches the desktop.
+SDDM_THEME_DIR = "/usr/share/sddm/themes/nocturnus"
+SDDM_BACKGROUND = os.path.join(SDDM_THEME_DIR, "background.jpg")
+
 IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp")
 MOTION_EXTENSIONS = (".mp4", ".webm", ".mkv", ".mov", ".gif")
 
@@ -4173,6 +4179,49 @@ def link_current_wallpaper(image_path):
         sys.stderr.write(f"Cannot update the current-wallpaper link: {error}\n")
 
 
+def sync_sddm_background(image_path, blur=True):
+    """Copy the current wallpaper's poster into the SDDM theme.
+
+    SDDM reads its theme as the sddm user and cannot follow a symlink into a
+    0700 home, so the greeting's background.jpg must be a real copy. The file
+    is written atomically via a temp name and renamed into place. Requires
+    write access to /usr/share/sddm/themes/nocturnus/ (set up by `./setup system`).
+    """
+    if not os.path.isfile(image_path):
+        return False
+    if not os.path.isdir(SDDM_THEME_DIR):
+        return False
+
+    temp_path = SDDM_BACKGROUND + ".nocturnus-new"
+    try:
+        if blur and shutil.which("magick"):
+            subprocess.run(
+                ["magick", image_path, "-blur", "0x18", "-quality", "92", temp_path],
+                capture_output=True, timeout=30, check=True
+            )
+        else:
+            shutil.copy2(image_path, temp_path)
+        os.replace(temp_path, SDDM_BACKGROUND)
+    except (OSError, subprocess.SubprocessError, subprocess.CalledProcessError):
+        # Try with sudo: the theme directory is root-owned.
+        try:
+            if blur and shutil.which("magick"):
+                subprocess.run(
+                    ["sudo", "-n", "magick", image_path, "-blur", "0x18", "-quality", "92", temp_path],
+                    capture_output=True, timeout=30, check=True
+                )
+            else:
+                subprocess.run(["sudo", "-n", "cp", image_path, temp_path],
+                              capture_output=True, timeout=15, check=True)
+            subprocess.run(["sudo", "-n", "mv", "-f", temp_path, SDDM_BACKGROUND],
+                          capture_output=True, timeout=15, check=True)
+        except (OSError, subprocess.SubprocessError, subprocess.CalledProcessError):
+            sys.stderr.write("Could not update SDDM background: "
+                             "permission denied for /usr/share/sddm/themes/nocturnus/\n")
+            return False
+    return True
+
+
 # awww transition types accepted from the shell; anything else becomes a wipe.
 WALLPAPER_TRANSITIONS = ("none", "simple", "fade", "left", "right", "top", "bottom",
                          "wipe", "wave", "grow", "center", "any", "outer")
@@ -4217,6 +4266,7 @@ def set_wallpaper(chosen, transition="wipe"):
     state["currentMotion"] = motion
     save_state(state)
     link_current_wallpaper(image_path)
+    sync_sddm_background(image_path)
     extract_colors(image_path)
     return True
 
@@ -4281,7 +4331,7 @@ def set_theme(theme_id):
 def main():
     actions = ("list-wallpapers | list-animated | get-current | get-state | "
                "set-wallpaper <path> [transition] | "
-               "restore | extract-colors [path] | set-theme <id> | "
+               "sync-sddm | restore | extract-colors [path] | set-theme <id> | "
                "push-terminal-palette <json> | push-terminal-font <family> | "
                "apply-vscodium [json] | apply-thunar | apply-vesktop")
     if len(sys.argv) < 2:
@@ -4304,6 +4354,10 @@ def main():
         print(json.dumps(state))
     elif action == "extract-colors":
         print(json.dumps(extract_colors(argument or get_current_wallpaper())))
+    elif action == "sync-sddm":
+        current = get_current_wallpaper()
+        image = poster_of(current) if is_motion(current) else current
+        sys.exit(0 if sync_sddm_background(image) else 1)
     elif action == "set-wallpaper" and argument:
         transition = sys.argv[3] if len(sys.argv) >= 4 else "wipe"
         sys.exit(0 if set_wallpaper(argument, transition) else 1)

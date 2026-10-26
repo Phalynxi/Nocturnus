@@ -182,25 +182,25 @@ Singleton {
     // ones, would crowd the text out, so they go under it as a row that
     // shares the width. Sizes are declared, since the island takes its shape
     // before the layer exists.
-    readonly property int toastPadding: 12
+    readonly property int toastPadding: 14
     // The row: a picture of `toastPicture`, beside a title and up to two
     // lines of body, which is what sets its height.
-    readonly property int toastRow: 54
-    readonly property int toastPicture: 48
-    readonly property int stackedRow: 40
+    readonly property int toastRow: 80
+    readonly property int toastPicture: 64
+    readonly property int stackedRow: 48
 
     // One width whatever it says, as a phone's island keeps one expanded
     // shape: the row is laid out inside it, with the app and the time at the
     // far end of the title so a short alert is not text and then nothing.
-    readonly property int toastWidth: 400
+    readonly property int toastWidth: 360
 
-    readonly property int textGap: 12
-    readonly property int buttonGap: 8
-    readonly property int buttonPad: 26
-    readonly property int buttonHeight: 42
+    readonly property int textGap: 14
+    readonly property int buttonGap: 10
+    readonly property int buttonPad: 28
+    readonly property int buttonHeight: 48
 
     // Labels short enough, together, to sit beside the text.
-    readonly property int inlineLetters: 20
+    readonly property int inlineLetters: 24
 
     function inlineButtons(notification: var): bool {
         const buttons = root.buttonsOf(notification)

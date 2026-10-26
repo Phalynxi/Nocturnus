@@ -8,7 +8,6 @@
 // ╰──────────────────────────────────────────────────────────────────────────╯
 
 import QtQuick
-import QtQuick.Effects
 
 import "."
 
@@ -109,14 +108,7 @@ Item {
         width: pill.width
         height: pill.height
 
-        layer.enabled: true
-        layer.effect: MultiEffect {
-            shadowEnabled: true
-            shadowBlur: 1
-            shadowOpacity: 0.5
-            shadowVerticalOffset: 4
-            shadowColor: Theme.island
-        }
+        layer.enabled: false
 
         // Shakes on a failed attempt; the shake is seen before the text below.
         SequentialAnimation {
@@ -156,7 +148,7 @@ Item {
             border.color: {
                 if (root.failed)
                     return Theme.indicatorBad
-                return root.typing ? Theme.accent : Theme.islandBorder
+                return root.typing ? Theme.islandBorder : Theme.islandBorder
             }
 
             Behavior on width {
@@ -378,13 +370,7 @@ Item {
         font.weight: Font.DemiBold
         color: root.capsLock ? Theme.indicatorWarn : Theme.indicatorBad
 
-        layer.enabled: true
-        layer.effect: MultiEffect {
-            shadowEnabled: true
-            shadowBlur: 0.8
-            shadowOpacity: 0.7
-            shadowColor: Theme.island
-        }
+        layer.enabled: false
     }
 
     // ── ACCOUNT LIST ────────────────────────────────────────────────────────
