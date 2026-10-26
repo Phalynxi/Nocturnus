@@ -689,7 +689,7 @@ verb_watch() {
 }
 
 # Copied because sddm reads its theme as its own user and cannot follow a link
-# into a 0700 home. Develop the greeter with `sddm-greeter-qt6 --test-mode`
+# into a 0700 home. Develop the greeter (Qt 5) with `sddm-greeter --test-mode`
 # against the working tree.
 verb_system() {
     section system

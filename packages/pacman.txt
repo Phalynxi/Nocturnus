@@ -132,6 +132,8 @@ cpio
 # ── LOGIN SCREEN ────────────────────────────────────────────────────────────
 
 sddm                         # ./setup system
+qt5-declarative              # the greeter is Qt 5 (QtQuick, QtQuick.Shapes)
+qt5-graphicaleffects         # the greeter's blur and avatar mask
 accountsservice              # the account's full name, which both screens show
 
 

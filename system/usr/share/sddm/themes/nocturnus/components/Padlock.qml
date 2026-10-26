@@ -7,8 +7,8 @@
 // │                                                                          │
 // ╰──────────────────────────────────────────────────────────────────────────╯
 
-import QtQuick
-import QtQuick.Shapes
+import QtQuick 2.15
+import QtQuick.Shapes 1.15
 
 import "."
 
@@ -31,16 +31,16 @@ Item {
 
     // Drawn a pixel high: the shackle's arc is lighter than the body, so the
     // glyph centred by its box reads low.
-    Shape {
-        y: -1
-        width: 20
-        height: 24
-        preferredRendererType: Shape.CurveRenderer
+Shape {
+    y: -1
+    width: 20
+    height: 24
+    antialiasing: true
 
-        transform: [
-            Translate { y: -4 * root.lift },
-            Rotation { origin.x: 5.2; origin.y: 12; angle: -14 * root.lift }
-        ]
+    transform: [
+        Translate { y: -4 * root.lift },
+        Rotation { origin.x: 5.2; origin.y: 12; angle: -14 * root.lift }
+    ]
 
         ShapePath {
             strokeWidth: 2.6

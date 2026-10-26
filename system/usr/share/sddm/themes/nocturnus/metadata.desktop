@@ -17,5 +17,5 @@ License=GPL-3.0
 Type=sddm-theme
 Version=1.0
 Website=https://github.com/Phalynxi/Nocturnus
-QtVersion=6
+QtVersion=5
 MainScript=Main.qml

@@ -7,7 +7,7 @@
 // │                                                                          │
 // ╰──────────────────────────────────────────────────────────────────────────╯
 
-import QtQuick
+import QtQuick 2.15
 
 import "."
 
@@ -37,11 +37,11 @@ Item {
     signal woke()
     signal escaped()
 
-    function claim(): void {
+    function claim() {
         field.forceActiveFocus()
     }
 
-    function clear(): void {
+    function clear() {
         field.clear()
     }
 
@@ -87,7 +87,7 @@ Item {
     }
 
     // First and last initials, as in the shell's AccountService.
-    function initialsOf(label: string): string {
+    function initialsOf(label) {
         const words = String(label).trim().split(/\s+/).filter(w => w.length > 0)
         if (words.length === 0)
             return "?"
@@ -127,7 +127,7 @@ Item {
         // failure keeps the pill stretched, so the shake is not a resize.
         Connections {
             target: root
-            function onFailedChanged(): void {
+            function onFailedChanged() {
                 if (!root.failed)
                     return
                 refusal.restart()

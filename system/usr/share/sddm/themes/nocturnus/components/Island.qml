@@ -7,8 +7,8 @@
 // │                                                                          │
 // ╰──────────────────────────────────────────────────────────────────────────╯
 
-import QtQuick
-import QtQuick.Shapes
+import QtQuick 2.15
+import QtQuick.Shapes 1.15
 
 import "."
 
@@ -35,16 +35,17 @@ Item {
 
         width: 2 * Theme.radiusNotch
         height: 2 * Theme.radiusNotch
-        preferredRendererType: Shape.CurveRenderer
+        antialiasing: true
 
         transform: Scale {
             xScale: fillet.mirrored ? -1 : 1
             origin.x: fillet.width / 2
         }
 
-        ShapePath {
-            strokeWidth: 0
-            fillColor: Theme.island
+ShapePath {
+    strokeWidth: -1
+    strokeColor: "transparent"
+    fillColor: Theme.island
 
             startX: 0
             startY: 0
@@ -72,15 +73,23 @@ Item {
         anchors.top: parent.top
     }
 
-    Rectangle {
-        id: body
+Item {
+    id: body
 
-        anchors.fill: parent
+    anchors.fill: parent
+    clip: true
+
+    Rectangle {
+        readonly property real corner: Math.min(root.height / 2, Theme.radiusLarge + 4)
+
+        y: -corner
+        width: parent.width
+        height: parent.height + corner
+        radius: corner
         color: Theme.island
-        radius: Math.min(root.height / 2, Theme.radiusLarge + 4)
-        topLeftRadius: 0
-        topRightRadius: 0
+        antialiasing: true
     }
+}
 
     // Centred as the bar centres its own: half the notch's pad above, half
     // below.

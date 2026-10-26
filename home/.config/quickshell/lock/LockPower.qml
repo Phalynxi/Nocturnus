@@ -43,16 +43,15 @@ Row {
         height: Theme.capsuleHeight
         radius: Theme.radiusPill
 
-        // Pure black, like the clock's chip and the greeter's buttons. Hover
-        // lifts the fill and the outline stays fixed: animating `islandBorder`
-        // to `hairline` passes through a brighter 50% white and flashes.
+        // The island's ground, like the battery chip. Hover lifts the fill and
+        // the outline stays fixed: animating it would flash.
         color: {
             if (chip.isArmed)
                 return Theme.indicatorBad
-            return area.containsMouse ? Theme.islandSurfaceHover : Theme.island
+            return area.containsMouse ? Theme.islandGroundLit : Theme.islandGround
         }
         border.width: 1
-        border.color: chip.isArmed ? Theme.indicatorBad : Theme.islandBorder
+        border.color: chip.isArmed ? Theme.indicatorBad : Theme.veilLineOf(Theme.surfaceStyle)
 
         Behavior on width {
             NumberAnimation { duration: Theme.durationFast; easing.type: Theme.easing }

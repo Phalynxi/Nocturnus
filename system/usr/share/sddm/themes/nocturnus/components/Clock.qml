@@ -7,7 +7,7 @@
 // │                                                                          │
 // ╰──────────────────────────────────────────────────────────────────────────╯
 
-import QtQuick
+import QtQuick 2.15
 
 import "."
 
@@ -52,7 +52,6 @@ Item {
                 font.pixelSize: Theme.fontSizeClock
                 font.weight: Font.Bold
                 font.letterSpacing: -Math.round(Theme.fontSizeClock * 0.04)
-                font.features: { "tnum": 1 }
                 color: Theme.text
             }
 
@@ -63,7 +62,6 @@ Item {
                 font.pixelSize: Theme.fontSizeClock
                 font.weight: Font.Bold
                 font.letterSpacing: -Math.round(Theme.fontSizeClock * 0.04)
-                font.features: { "tnum": 1 }
                 color: Theme.text
                 opacity: 0.55
             }

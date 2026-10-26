@@ -89,6 +89,7 @@ Item {
         anchors.right: body.left
         anchors.top: parent.top
         visible: root.attached
+        color: Theme.islandGround
         mirrored: true
     }
 
@@ -96,13 +97,14 @@ Item {
         anchors.left: body.right
         anchors.top: parent.top
         visible: root.attached
+        color: Theme.islandGround
     }
 
     Rectangle {
         id: body
 
         anchors.fill: parent
-        color: Theme.island
+        color: Theme.islandGround
         radius: root.open ? 2 * Theme.radiusLarge + 8
                           : Math.min(root.height / 2, Theme.radiusLarge + 4)
         topLeftRadius: root.attached ? 0 : body.radius
