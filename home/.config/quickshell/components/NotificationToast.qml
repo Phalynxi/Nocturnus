@@ -3,9 +3,9 @@
 // │   N O T I F I C A T I O N   T O A S T                                   │
 // │   floating notification · outside the bar                               │
 // │                                                                          │
-// │   github.com/Phalynxi/Nocturnus                                          │
+// │   github.com/Phalynxi/Nocturnus                                      │
 // │                                                                          │
-// ╰──────────────────────────────────────────────────────────────────────────┙
+// ╰──────────────────────────────────────────────────────────────────────────╙
 
 import QtQuick
 import Quickshell
@@ -26,23 +26,25 @@ PanelWindow {
     // namespace (`hyprglass.layer` on `nocturnus-toast`, in Hyprland's look).
     readonly property bool glassy: true
 
-    // Full‑screen surface — content is positioned inside (like Dock, Hive).
+    // The window hugs the pill, top‑right under the bar's airspace. A
+    // full‑screen surface would take every click while the toast stands; a
+    // window the pill's size leaves the rest of the desk clickable.
     anchors.top: true
-    anchors.bottom: true
-    anchors.left: true
     anchors.right: true
+    margins.top: SettingsService.barHeight + SettingsService.barMargin
+    margins.right: 16
 
     color: "transparent"
     WlrLayershell.namespace: "nocturnus-toast"
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
     WlrLayershell.exclusiveZone: 0
+    width: NotificationService.toastWidth
+    height: NotificationService.toastHeight
 
-    // Toggled like the dock and the hive: an unmapped surface lets clicks
-    // through to the windows under it; a forever‑mapped one would swallow
-    // them all. During a fullscreen game the toast stays down: the arriving
-    // surface's map pulled focus mid‑fight, and a pilfered frame is a lost
-    // one — critical notifications still ring through.
+    // Toggled like the dock and the hive, and down while a fullscreen game
+    // runs: the arriving surface's map pulled focus mid‑fight, and a pilfered
+    // frame is a lost one. Critical notifications still ring through.
     visible: ((NotificationService.active && !SettingsService.doNotDisturb
         && !HyprlandService.clients.some(
             client => (client.fullscreen ?? 0) >= 2))
@@ -57,19 +59,13 @@ PanelWindow {
     Rectangle {
         id: toast
 
-        width: NotificationService.toastWidth
-        height: NotificationService.toastHeight
+        anchors.fill: parent
+        opacity: root.visible ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: Theme.durationFast } }
         radius: Math.min(height / 2, Theme.radiusLarge + 4)
         color: Theme.islandGround
         border.color: Theme.rimOf(Theme.styleIn(QsWindow.window))
         border.width: 1
-
-        // Top‑right, just under the bar's airspace.
-        x: root.width - width - 16
-        y: SettingsService.barHeight + SettingsService.barMargin
-
-        opacity: root.visible ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: Theme.durationFast } }
 
         // The island loads the layer inside its own padding, standing in for
         // the margins; the toast gives them here, so the row centres in the
