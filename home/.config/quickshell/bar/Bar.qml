@@ -87,6 +87,11 @@ PanelWindow {
 
     readonly property bool holding: island.expanded
 
+    // The drawer under the island is out (`drawer`). Per bar: only the live
+    // one opens it.
+    property bool drawerOpen: false
+    onLiveChanged: if (!root.live) root.drawerOpen = false
+
     // Maximum panel width. Spread, the sides stay put, so a panel gets the room
     // between them; otherwise the sides move aside and it gets the whole bar.
     readonly property int panelRoom: root.spread
@@ -110,7 +115,7 @@ PanelWindow {
 
     // The same at both ends, so the clock stays centred on the screen.
     readonly property real hostedSlot: root.unified
-        ? root.hostedInset + Math.max(leftZone.width, rightZone.width) + Theme.capsuleSpacing * 2
+        ? root.hostedInset + Math.max(leftZone.width, rightZone.width) + Theme.capsuleSpacing
         : 0
 
     // The island's width inside the band, animated on the island's clock so
@@ -158,10 +163,14 @@ PanelWindow {
     // `bandInto` goes from 0 to 1. Both run on the same curve, so this is one
     // morph with no clock of its own. The max() stops a spring curve's
     // overshoot from making the band narrower than the island.
-    readonly property real bandWidth: root.bandInto === 0 && !root.islandTaken
+    //
+    // Both edges land on whole pixels: on glass, a band edge between two
+    // pixels and a notch fillet meeting it there each half-cover that
+    // column, and the wallpaper shows through as a light seam.
+    readonly property real bandWidth: Math.round(root.bandInto === 0 && !root.islandTaken
         ? root.bodyWidth
-        : island.width + (root.bodyWidth - root.restWidth) * Math.max(0, 1 - root.bandInto)
-    readonly property real bandX: (root.width - root.bandWidth) / 2
+        : island.width + (root.bodyWidth - root.restWidth) * Math.max(0, 1 - root.bandInto))
+    readonly property real bandX: Math.round((root.width - root.bandWidth) / 2)
 
     // Attached (notch mode), only the island reaches the screen edge; the
     // sides stay capsules, centred on `laneY`.
@@ -235,6 +244,15 @@ PanelWindow {
             width: root.inert ? 0 : root.shapeRight - root.shapeLeft
             height: root.islandTopMargin + island.height + 12
         }
+
+        // The drawer: its line's catch strip while the line shows, or the
+        // open pill; nothing at all otherwise.
+        Region {
+            x: drawer.x
+            y: drawer.y
+            width: root.inert || !drawer.visible || !drawer.shown ? 0 : drawer.width
+            height: drawer.height
+        }
     }
 
     // The reserve is `BarReserve.qml`'s, one strip per screen that outlives
@@ -253,16 +271,21 @@ PanelWindow {
     // other surface clears it, which closes the island. The compositor
     // restores focus when the grab ends. Both stand down while the capture
     // surface is up, so an open panel waits under it instead of closing.
-    readonly property bool holdsKeyboard: root.live && island.expanded
+    readonly property bool holdsKeyboard: root.live && (island.expanded || root.drawerOpen)
         && !CaptureService.active
 
     WlrLayershell.keyboardFocus: root.holdsKeyboard
         ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
+    // The drawer is held the same way: a click anywhere else puts it away,
+    // however it was opened.
     HyprlandFocusGrab {
         active: root.holdsKeyboard
         windows: [root]
-        onCleared: root.dismiss()
+        onCleared: {
+            root.drawerOpen = false
+            root.dismiss()
+        }
     }
 
     HoverHandler {
@@ -302,9 +325,14 @@ PanelWindow {
             root.activate(id)
         }
 
-        // Bar buttons for panels (launcher, overview) toggle them.
+        // Bar buttons for panels (launcher, overview) toggle them. The
+        // control centre is the drawer now.
         function onPanelToggled(panel: string): void {
-            island.toggle(panel)
+            if (panel === "controls")
+                root.drawerOpen = !root.drawerOpen
+            // The launcher has its own surface (`shell.qml`).
+            else if (panel !== "launcher")
+                island.toggle(panel)
         }
 
         // The service closed the detail, e.g. the player went away.
@@ -584,12 +612,11 @@ PanelWindow {
                     edges: !SettingsService.islandAttached
                 }
 
-                // Clicking the band opens the island. The sides sit above it and
-                // take their own clicks.
+                // The band is not a button; the sides sit above it and take
+                // their own clicks. Held here so a click on it does not fall
+                // through to a window.
                 MouseArea {
                     anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: island.open("controls")
                 }
             }
         }
@@ -599,6 +626,8 @@ PanelWindow {
 
             active: root.live
             hosted: root.unified
+            // The glance stays while the pointer is on the drawer under it.
+            kept: catchHover.hovered || root.drawerOpen
             roomForPanel: root.panelRoom
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: parent.top
@@ -607,6 +636,140 @@ PanelWindow {
             Behavior on anchors.topMargin {
                 enabled: island.animated
                 NumberAnimation { duration: Theme.durationMedium; easing.type: Theme.easing }
+            }
+        }
+
+        // ── DRAWER ──────────────────────────────────────────────────────────
+        //
+        // A short rounded line a little under the island, in its glass, that
+        // fades in while the island shows its glance (the hover expansion),
+        // not on any pass over the bar. A click grows
+        // it into a pill of buttons (`QuickPanel`), never wider than the bar;
+        // it shrinks back once the pointer leaves it, after a one-shot button,
+        // or on the control-centre key. What takes the click is a strip wider
+        // and taller than the line, from the island's edge down, since the
+        // line itself is a few pixels.
+        Item {
+            id: drawer
+
+            readonly property bool out: root.drawerOpen
+            readonly property bool shown: drawer.out
+                || island.state.layer === island.state.layerSummary
+            // The island's lower edge, wherever it is: the glance grows it
+            // and the line moves down with it. The island keeps its glance
+            // while the pointer is here (`DynamicIsland.kept`), so the line
+            // never moves out from under the pointer.
+            readonly property real topY: root.islandTopMargin + island.height
+
+            readonly property int catchWidth: 200
+            readonly property int catchHeight: 30
+            readonly property int padX: 14
+            readonly property int padY: 14
+            // The space between the island and the line or the pill.
+            readonly property int gap: 7
+            // Open, what the buttons want, but never wider than the bar.
+            readonly property real openWidth: Math.min(root.shapeRight - root.shapeLeft,
+                quick.minimumWidth + 2 * drawer.padX)
+
+            visible: root.live && !root.away && !island.expanded
+            x: (root.width - width) / 2
+            y: drawer.topY
+            width: drawer.out ? drawer.openWidth : drawer.catchWidth
+            height: drawer.out ? drawer.gap + quick.implicitHeight + 2 * drawer.padY : drawer.catchHeight
+
+            Rectangle {
+                id: pill
+
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: drawer.gap
+                width: drawer.out ? parent.width : (catchHover.hovered ? 60 : 44)
+                height: drawer.out ? parent.height - drawer.gap : 6
+                radius: drawer.out ? Math.min(island.radius, height / 2) : height / 2
+                // The island's own ground, glass and all, so the two read as
+                // the same material.
+                color: drawer.out || !catchHover.hovered ? island.surfaceColor : Theme.islandGroundLit
+                border.color: drawer.out ? Theme.islandRim : Qt.rgba(1, 1, 1, 0.35)
+                border.width: drawer.out && Theme.glass ? 0 : 1
+
+                GlassSheen {
+                    shape: pill
+                    visible: Theme.glass && drawer.out
+                }
+                opacity: drawer.shown ? 1 : 0
+                visible: opacity > 0
+
+                Behavior on opacity { NumberAnimation { duration: Theme.durationMedium; easing.type: Theme.easing } }
+
+                Behavior on width { NumberAnimation { duration: Theme.durationMorph; easing.type: Theme.easing } }
+                Behavior on height { NumberAnimation { duration: Theme.durationMorph; easing.type: Theme.easing } }
+                Behavior on color { ColorAnimation { duration: Theme.durationFast } }
+
+                // Escape puts it away while it holds the keyboard.
+                Item {
+                    focus: root.drawerOpen
+                    Keys.onEscapePressed: root.drawerOpen = false
+                }
+
+                QuickPanel {
+                    id: quick
+
+                    anchors.centerIn: parent
+                    width: drawer.openWidth - 2 * drawer.padX
+                    opacity: drawer.out ? 1 : 0
+                    visible: opacity > 0
+                    enabled: drawer.out
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: drawer.out ? Theme.durationMedium : Theme.durationFast
+                            easing.type: Theme.easing
+                        }
+                    }
+
+                    onClosed: root.drawerOpen = false
+                    onSettingsRequested: {
+                        root.drawerOpen = false
+                        ModuleService.settingsRequested()
+                    }
+                    onPanelRequested: panel => {
+                        root.drawerOpen = false
+                        island.open(panel)
+                    }
+                }
+            }
+
+            HoverHandler {
+                id: catchHover
+                enabled: drawer.shown
+                cursorShape: drawer.out ? Qt.ArrowCursor : Qt.PointingHandCursor
+            }
+
+            TapHandler {
+                enabled: drawer.shown && !drawer.out
+                onTapped: root.drawerOpen = true
+            }
+
+            // Slides back once the pointer leaves. Opened from the key with
+            // the pointer elsewhere, it waits until it has been visited.
+            property bool visited: false
+
+            Connections {
+                target: root
+                function onDrawerOpenChanged(): void { drawer.visited = catchHover.hovered }
+            }
+
+            Connections {
+                target: catchHover
+                function onHoveredChanged(): void {
+                    if (catchHover.hovered && drawer.out)
+                        drawer.visited = true
+                }
+            }
+
+            Timer {
+                interval: 350
+                running: drawer.out && drawer.visited && !catchHover.hovered && !island.hovered
+                onTriggered: root.drawerOpen = false
             }
         }
 

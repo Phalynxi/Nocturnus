@@ -33,6 +33,7 @@ singleton BluetoothService   1.0 services/BluetoothService.qml
 singleton ClaudeService      1.0 services/ClaudeService.qml
 singleton CodexService       1.0 services/CodexService.qml
 singleton UpdatesService     1.0 services/UpdatesService.qml
+singleton InboxService       1.0 services/InboxService.qml
 singleton PetService         1.0 services/PetService.qml
 singleton ModuleService      1.0 services/ModuleService.qml
 singleton ShortcutService    1.0 services/ShortcutService.qml
@@ -129,6 +130,7 @@ TimerWidget      1.0 bar/widgets/TimerWidget.qml
 NotificationLayer 1.0 bar/island/NotificationLayer.qml
 AppearancePanel  1.0 bar/island/AppearancePanel.qml
 ControlsPanel    1.0 bar/island/ControlsPanel.qml
+QuickPanel       1.0 bar/island/QuickPanel.qml
 LauncherPanel    1.0 bar/island/LauncherPanel.qml
 StatsPanel       1.0 bar/island/StatsPanel.qml
 OverviewPanel    1.0 bar/island/OverviewPanel.qml
@@ -196,9 +198,7 @@ Block            1.0 bar/island/controls/Block.qml
 BlockFace        1.0 bar/island/controls/BlockFace.qml
 TogglesBlock     1.0 bar/island/controls/TogglesBlock.qml
 ImpastoBlock     1.0 bar/island/controls/ImpastoBlock.qml
-PetBlock         1.0 bar/island/controls/PetBlock.qml
-ClockBlock       1.0 bar/island/controls/ClockBlock.qml
-GamesBlock       1.0 bar/island/controls/GamesBlock.qml
+SystemBlock      1.0 bar/island/controls/SystemBlock.qml
 ControlsTray     1.0 bar/island/controls/ControlsTray.qml
 NetworkDetail    1.0 bar/island/NetworkDetail.qml
 SoundDetail      1.0 bar/island/SoundDetail.qml

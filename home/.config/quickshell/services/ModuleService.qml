@@ -52,8 +52,7 @@ Singleton {
         { id: "github",        name: "GitHub",        bar: false, width: Theme.cardWidth, height: Theme.cardHeight(0, GithubService.cardGrid) },
         { id: "stats",         name: "System",        bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(2, Theme.cardRowGap + 36) },
         { id: "updates",       name: "Updates",       bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(4, 0) },
-        { id: "pet",           name: "Pet",           bar: true,  width: Theme.cardWidth, height: Theme.cardHeight(2, Theme.cardRowGap + 32) },
-        { id: "games",         name: "Games",         bar: false, width: Theme.cardWidth, height: Theme.cardHeight(4, 0) },
+        { id: "inbox",         name: "GitHub inbox",  bar: true,  desk: false, width: Theme.cardWidth + 60, height: Theme.cardHeight(5, 0) },
         { id: "calendar",      name: "Calendar",      bar: true,  width: 340, height: 330 },
         { id: "notes",         name: "Notes",         bar: false, width: Theme.cardWidth, height: Theme.cardHeight(4, 0) },
         { id: "tasks",         name: "Tasks",         bar: false, width: Theme.cardWidth, height: Theme.cardHeight(4, 0) },
@@ -75,13 +74,13 @@ Singleton {
     // button beside them would be the same piece without its figure. Alone in
     // a capsule, a button is drawn as a circle.
     //
-    // On the bar an id is a button before it is a module; notes and games are
-    // modules only on the desktop.
+    // On the bar an id is a button before it is a module; notes are a
+    // module only on the desktop.
     //
     // Capture is what the capture key does: the photo is taken at once, so
     // whatever the island has open is in it.
     readonly property var buttonIds: ["launcher", "overview", "controls", "capture",
-        "appearance", "notes", "board", "games", "keys", "packages", "settings", "session"]
+        "appearance", "notes", "board", "keys", "packages", "settings", "session"]
 
     readonly property var buttons: {
         const out = {}
@@ -140,6 +139,11 @@ Singleton {
                 UpdatesService.subscribe()
             else
                 UpdatesService.release()
+        } else if (id === "inbox") {
+            if (on)
+                InboxService.subscribe()
+            else
+                InboxService.release()
         }
     }
 
@@ -196,6 +200,8 @@ Singleton {
             return WeatherService.glyph || "󰖐"
         case "updates":
             return "󰏖"
+        case "inbox":
+            return "\uf09b"
         case "notifications":
             return NotificationService.doNotDisturb ? "󰂛" : "󰂚"
         case "media":
@@ -226,6 +232,8 @@ Singleton {
             return WeatherService.available ? `${WeatherService.temperature}°` : "--°"
         case "updates":
             return `${UpdatesService.count}`
+        case "inbox":
+            return `${InboxService.count}`
         case "notifications":
             return `${NotificationService.history.length}`
         case "media":
@@ -347,8 +355,8 @@ Singleton {
         return list.slice(0, 2)
     }
 
-    // Resting width. Alone, the time keeps the catalogue width; with
-    // activities it shrinks to fit and each side gets a slot. One activity
+    // Resting width. Alone, the time and a margin either side, so the bar's
+    // sides sit close to it; with activities each side gets a slot. One activity
     // splits across both sides (mark left, figure right); two take one each.
     readonly property int clockCore: SettingsService.clockShowsDate
         ? 150 : (SettingsService.clockShowsSeconds ? 88 : 72)
@@ -374,8 +382,25 @@ Singleton {
         font.weight: Font.DemiBold
     }
     readonly property int restWidth: root.activities.length === 0
-        ? root.entry("clock").width
+        ? root.clockFace + 2 * Theme.capsuleSpacing
         : root.clockCore + 2 * root.activitySide
+
+    // The resting clock as `ClockModule` sets it, measured on a wide time
+    // and date so the island does not breathe from minute to minute.
+    readonly property int clockFace: Math.ceil(
+        root.clockMetrics.advanceWidth(Qt.formatTime(
+            new Date(2000, 0, 1, 20, 48, 58), SettingsService.clockFormat))
+        + (SettingsService.clockShowsDate
+            ? 8 + root.dateMetrics.advanceWidth("Wed 28 Sep") : 0))
+    readonly property FontMetrics clockMetrics: FontMetrics {
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSizeRegular
+        font.weight: Font.DemiBold
+    }
+    readonly property FontMetrics dateMetrics: FontMetrics {
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSizeSmall
+    }
 
     // The glance the island opens under a resting pointer: with a player,
     // the cover, the controls and the time large beside them; without one,
@@ -425,6 +450,8 @@ Singleton {
                      height: Theme.cardHeight(Math.min(6, NotificationService.history.length) + 1, 0) }
         if (id === "updates")
             return { width: item.width, height: Theme.cardHeight(Math.min(3, UpdatesService.updates.length) + 1, 0) }
+        if (id === "inbox")
+            return { width: item.width, height: Theme.cardHeight(Math.min(4, InboxService.count) + 1, 0) }
         if (id === "games")
             return { width: item.width, height: Theme.cardHeight(Math.min(3, GamesService.ranked.length) + 1, 0) }
         if (id === "notes")
@@ -523,6 +550,9 @@ Singleton {
         case "updates":
             // False on a machine with neither checkupdates nor pacman.
             return UpdatesService.available
+        case "inbox":
+            // False without gh, or signed out of it.
+            return InboxService.available
         case "pet":
             // `ready` is constant true; reading it builds the service, and
             // the service's trickle runs while the pet is on the bar.

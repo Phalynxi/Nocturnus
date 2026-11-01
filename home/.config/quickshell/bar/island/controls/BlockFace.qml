@@ -43,10 +43,7 @@ Item {
         weather: weatherBlock,
         calendar: calendarBlock,
         notifications: notificationsBlock,
-        nocturnus: nocturnusBlock,
-        pet: petBlock,
-        clock: clockBlock,
-        games: gamesBlock,
+        system: systemBlock,
         notes: notesBlock,
         tasks: tasksBlock,
         session: sessionBlock,
@@ -158,34 +155,11 @@ Item {
     }
 
     Component {
-        id: nocturnusBlock
-        NocturnusBlock {
+        id: systemBlock
+        SystemBlock {
             cols: root.shape.cols
             rows: root.shape.rows
-        }
-    }
-
-    Component {
-        id: petBlock
-        PetBlock {
-            rows: root.shape.rows
             onPanelRequested: panel => root.panelRequested(panel)
-        }
-    }
-
-    Component {
-        id: gamesBlock
-        GamesBlock {
-            rows: root.shape.rows
-            onPanelRequested: panel => root.panelRequested(panel)
-        }
-    }
-
-    Component {
-        id: clockBlock
-        ClockBlock {
-            cols: root.shape.cols
-            rows: root.shape.rows
         }
     }
 

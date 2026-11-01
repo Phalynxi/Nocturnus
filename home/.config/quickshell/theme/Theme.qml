@@ -92,16 +92,22 @@ QtObject {
     // with a `groundStyle`), and the dock, which asks `dockStyle` directly;
     // everything else — the settings, the lock — stays black, so a part
     // drawn in both asks by its window (`surfaceIn`).
+    //
+    // "pane" is the settings window's: the same glass, denser, since a page
+    // of controls has to read as cards rather than tints over the picture.
     function veilOf(style: string): color {
-        return style === "glass" ? Qt.rgba(1, 1, 1, 0.08) : root.islandSurface
+        return style === "glass" ? Qt.rgba(1, 1, 1, 0.08)
+            : style === "pane" ? Qt.rgba(1, 1, 1, 0.075) : root.islandSurface
     }
 
     function veilHoverOf(style: string): color {
-        return style === "glass" ? Qt.rgba(1, 1, 1, 0.14) : root.islandSurfaceHover
+        return style === "glass" ? Qt.rgba(1, 1, 1, 0.14)
+            : style === "pane" ? Qt.rgba(1, 1, 1, 0.12) : root.islandSurfaceHover
     }
 
     function veilLineOf(style: string): color {
-        return style === "glass" ? Qt.rgba(1, 1, 1, 0.12) : root.islandBorder
+        return style === "glass" ? Qt.rgba(1, 1, 1, 0.12)
+            : style === "pane" ? Qt.rgba(1, 1, 1, 0.10) : root.islandBorder
     }
 
     function styleIn(window: var): string {
@@ -347,7 +353,7 @@ QtObject {
     readonly property real pictureCorner: 0.24
 
     // Where the notch meets the screen edge.
-    readonly property int radiusNotch: 6
+    readonly property int radiusNotch: 10
 
     // ── FIXED COLOURS ───────────────────────────────────────────────────────
     //

@@ -81,7 +81,8 @@ Rectangle {
     // Declared rather than measured: the island has to reach its final shape
     // before the panel inside it is loaded.
     readonly property var panelSizes: ({
-        controls:   { width: ControlsService.panelWidth, height: ControlsService.panelHeight },
+        // `QuickPanel`'s one row of buttons, padding included.
+        controls:   { width: 360, height: 106 },
         appearance: root.appearanceSize,
         palette:    root.appearanceSize,
         stats:      { width: 940,  height: 614 },
@@ -231,6 +232,18 @@ Rectangle {
 
     property bool summaryHeld: false
 
+    // Set by the bar while the pointer is on something hanging from the
+    // island (its drawer), so the glance stays open as the pointer crosses
+    // from one to the other.
+    property bool kept: false
+
+    onKeptChanged: {
+        if (root.kept)
+            grace.stop()
+        else if (!hover.hovered)
+            grace.restart()
+    }
+
     readonly property bool restBusy: islandState.layer === islandState.layerModules
         && (collapsedLoader.item?.busy ?? false)
 
@@ -300,7 +313,7 @@ Rectangle {
         id: grace
         interval: 260
         onTriggered: {
-            if (!hover.hovered)
+            if (!hover.hovered && !root.kept)
                 islandState.summary = false
         }
     }
@@ -406,12 +419,9 @@ Rectangle {
         MouseArea {
             id: capsuleMouse
             anchors.fill: parent
+            // Hover only: the island at rest is not a button. What it opens
+            // hangs under it (`Bar.qml`'s drawer).
             hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: {
-                root.summaryHeld = true
-                root.open("controls")
-            }
         }
 
         Item {
@@ -532,7 +542,7 @@ Rectangle {
 
     Component {
         id: controlsPanel
-        ControlsPanel {
+        QuickPanel {
             onClosed: root.close()
             onPanelRequested: panel => root.open(panel)
             // Settings is a window, not a panel: close the island, then pass
