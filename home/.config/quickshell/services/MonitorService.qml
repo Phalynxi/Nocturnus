@@ -210,6 +210,12 @@ Singleton {
     // key).
     onStoreChanged: root.pushSoon.restart()
 
+    // The last rules sent. A screen can refuse one (VRR over HDMI, a mode it
+    // does not list) and keep differing from it; sending it again would loop
+    // every settle. So a set of rules goes once: a changed arrangement is
+    // other rules, and only the screens changing clears it.
+    property string pushed: ""
+
     readonly property Timer pushSoon: Timer {
         interval: 120
         onTriggered: root.applyProfile()
@@ -249,8 +255,12 @@ Singleton {
         }
         if (rules.length === 0)
             return
+        const payload = JSON.stringify(rules)
+        if (payload === root.pushed)
+            return
+        root.pushed = payload
         root.settling.restart()
-        root.applier.command = [root.script, "apply", JSON.stringify(rules)]
+        root.applier.command = [root.script, "apply", payload]
         root.applier.running = true
     }
 
@@ -402,12 +412,12 @@ Singleton {
 
     // Bringing an output up emits a burst of events. Nothing is pushed while
     // this runs; the read at the end sees the settled state.
+    // Not `disturbed`: what was pushed here only changes modes and places,
+    // and the rescue after it would pull a screen off an empty workspace it
+    // was just switched to. Screens arriving and leaving set it (`hotplug`).
     readonly property Timer settling: Timer {
         interval: 600
-        onTriggered: {
-            root.disturbed = true
-            root.load()
-        }
+        onTriggered: root.load()
     }
 
     readonly property Process applier: Process {}
@@ -424,6 +434,7 @@ Singleton {
             case "monitoraddedv2":
             case "monitorremoved":
             case "monitorremovedv2":
+                root.pushed = ""
                 root.hotplug.restart()
                 break
             }
