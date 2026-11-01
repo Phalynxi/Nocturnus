@@ -21,6 +21,7 @@ import "./capture"
 import "./components"
 import "./desktop"
 import "./dock"
+import "./launcher"
 import "./lock"
 import "./services"
 import "./settings"
@@ -189,7 +190,7 @@ ShellRoot {
             live: modelData.name === root.liveScreenName
 
             // The dock cannot see the island, so it asks.
-            onLauncherRequested: root.island?.toggle("launcher")
+            onLauncherRequested: launcher.toggle()
         }
     }
 
@@ -280,7 +281,7 @@ ShellRoot {
     GlobalShortcut {
         name: "launcher"
         description: "Open the island launcher"
-        onPressed: root.island?.toggle("launcher")
+        onPressed: launcher.toggle()
     }
 
     // ── LID ─────────────────────────────────────────────────────────────────
@@ -310,7 +311,7 @@ ShellRoot {
     GlobalShortcut {
         name: "controls"
         description: "Open the island quick controls"
-        onPressed: root.island?.toggle("controls")
+        onPressed: ModuleService.togglePanel("controls")
     }
 
     // The brightness keys act on the focused screen, which only the shell
@@ -436,18 +437,24 @@ ShellRoot {
     }
 
     // The clipboard and the emoji are launcher modes: pressed again on that
-    // mode it closes, pressed on another mode it switches. The query is set
-    // before opening because with `launcherFits` the panel's height depends on
-    // it, and the island is sized before the panel exists.
+    // mode it closes, pressed on another mode it switches.
     function openLauncherOn(mode: string): void {
-        const sigil = SettingsService.launcherPrefix(mode)
-        const showing = root.island?.state.openPanel === "launcher"
-        if (showing && LauncherService.query.startsWith(sigil)) {
-            root.island?.close()
-            return
+        launcher.show(SettingsService.launcherPrefix(mode))
+    }
+
+    // The launcher is its own surface now, not an island panel. Bar buttons
+    // ask for it through `ModuleService`, as they ask for panels.
+    Launcher {
+        id: launcher
+    }
+
+    Connections {
+        target: ModuleService
+
+        function onPanelToggled(panel: string): void {
+            if (panel === "launcher")
+                launcher.toggle()
         }
-        LauncherService.query = sigil
-        root.island?.open("launcher")
     }
 
     GlobalShortcut {
