@@ -108,6 +108,18 @@ def report(place):
             for day, blocks in enumerate(w["hourly"] for w in data["weather"][:2])
             for block in blocks
         ],
+        # The days wttr.in forecasts (three), each by its range and its
+        # midday sky.
+        "daily": [
+            {
+                "date": day["date"],
+                "low": int(day["mintempC"]),
+                "high": int(day["maxtempC"]),
+                "glyph": glyph(int(day["hourly"][len(day["hourly"]) // 2]["weatherCode"]), True),
+                "rain": max(int(block["chanceofrain"]) for block in day["hourly"]),
+            }
+            for day in data["weather"]
+        ],
     }
 
 

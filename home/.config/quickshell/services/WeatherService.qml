@@ -46,6 +46,8 @@ Singleton {
     property int low: 0
     property int high: 0
     property var hourly: []
+    // One row per forecast day: `date` (ISO), `low`, `high`, `glyph`, `rain`.
+    property var daily: []
 
     // So the card can show how old the reading is.
     property date readAt: new Date(0)
@@ -193,6 +195,7 @@ Singleton {
         root.low = report.low
         root.high = report.high
         root.hourly = report.hourly ?? []
+        root.daily = report.daily ?? []
         root.readAt = new Date()
         root.readFor = root.asked
         root.available = true

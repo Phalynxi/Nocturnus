@@ -14,6 +14,7 @@ import "./faces"
 import "./faces/analogue"
 import "./faces/sticker"
 import "./faces/nocturnus"
+import "./faces/poster"
 
 // Picks the face for a module, a family (size) and a theme. Modern has one
 // registry per family, falling back within that registry for modules without a
@@ -37,10 +38,13 @@ Item {
     readonly property bool analogue: root.theme === "analogue" && !root.shared
     readonly property bool sticker: root.theme === "sticker" && !root.shared
     readonly property bool nocturnus: root.theme === "nocturnus" && !root.shared
+    readonly property bool poster: root.theme === "poster" && !root.shared
 
     Loader {
         anchors.fill: parent
         sourceComponent: {
+            if (root.poster)
+                return posterface
             if (root.nocturnus)
                 return noctface
             if (root.analogue)
@@ -60,6 +64,11 @@ Item {
     Component {
         id: noctface
         Nocturnus { moduleId: root.moduleId; family: root.family; ink: root.ink; row: root.row }
+    }
+
+    Component {
+        id: posterface
+        Poster { moduleId: root.moduleId; family: root.family; ink: root.ink; row: root.row }
     }
 
     Component {

@@ -81,6 +81,7 @@ Singleton {
     // desktop setting.
     readonly property var themes: [
         { id: "nocturnus", label: "Nocturnus" },
+        { id: "poster",   label: "Poster" },
         { id: "modern",   label: "Modern" },
         { id: "analogue", label: "Analogue" },
         { id: "sticker",  label: "Sticker" }
@@ -112,6 +113,20 @@ Singleton {
             games: ["2x2", "4x2"],                  calendar: ["2x2", "4x2", "4x4"],
             notes: ["2x2", "4x2", "4x4", "8x2"],    tasks: ["2x2", "4x2", "4x4"],
             clock: ["2x2", "4x2", "4x4", "8x2"],    photo: ["2x2", "4x2", "4x4", "8x2"],
+            spectrum: ["4x2", "8x2", "10x2", "4x4"]
+        },
+        poster: {
+            media: ["2x2", "4x2", "4x4"],           timer: ["2x2", "4x2"],
+            claude: ["2x2", "4x2"],                 battery: ["2x2", "4x2"],
+            codex: ["2x2", "4x2"],
+            volume: ["2x2", "4x2"],                 brightness: ["2x2", "4x2"],
+            network: ["2x2", "4x2"],                bluetooth: ["2x2", "4x2"],
+            weather: ["4x2", "4x4"],                stats: ["2x2", "4x2", "4x4"],
+            github: ["2x2", "4x2", "8x2"],
+            updates: ["2x2", "4x2"],                pet: ["2x2", "4x2"],
+            games: ["2x2", "4x2"],                  calendar: ["2x2", "4x2", "4x4"],
+            notes: ["2x2", "4x2", "4x4", "8x2"],    tasks: ["2x2", "4x2", "4x4"],
+            clock: ["4x2", "8x2", "4x4"],           photo: ["2x2", "4x2", "4x4", "8x2"],
             spectrum: ["4x2", "8x2", "10x2", "4x4"]
         },
         modern: {
@@ -1279,10 +1294,12 @@ Singleton {
     // palette.
 
     // Notes draw their own paper, photos are their picture, the spectrum is
-    // its bars and a sticker is cut out of nothing: no capsule.
+    // its bars, a sticker is cut out of nothing and a poster's clock is set
+    // straight on the wallpaper: no capsule.
     function bare(widget: var): bool {
         return !!widget && (widget.id === "notes" || widget.id === "photo" || widget.id === "spectrum"
-            || root.themeOf(widget) === "sticker")
+            || root.themeOf(widget) === "sticker"
+            || (widget.id === "clock" && root.themeOf(widget) === "poster"))
     }
 
     // Whether any widget on the desk draws a capsule, and so has a use for
