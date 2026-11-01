@@ -289,6 +289,21 @@
         } catch (e) {}
     }
 
+    // Nocturnus owns the colours (color.ini, rewritten from the wallpaper).
+    // A community theme from THEME_HOST stores SpoTUI's own look over them —
+    // colours, a background picture, the player bar hidden — so that is
+    // dropped once. Anything set in the theme's panel after this is kept.
+    const PALETTE_RESET_KEY = "nocturnus:palette-reset-v1";
+    if (!storageGet(PALETTE_RESET_KEY)) {
+        [WP_URL_KEY, WP_OPACITY_KEY, LYRICS_COLOR_ACTIVE, LYRICS_COLOR_INACTIVE,
+            LYRICS_COLOR_LIGHT_INACTIVE, VISUALIZER_COLOR, PLAYER_BAR_BG,
+            PLAYER_BAR_BORDER, PLAYER_BAR_TEXT, PLAYER_BAR_VISIBLE,
+            CUSTOM_BAR_ENABLED, CUSTOM_BAR_PROGRESS_STYLE, PROGRESS_BAR_BG,
+            PROGRESS_BAR_FG, INPUT_BG, INPUT_BG_HOVER, INPUT_TEXT, INPUT_BORDER,
+            PANEL_BG, PANEL_BORDER, PANEL_TEXT].forEach(storageRemove);
+        storageSet(PALETTE_RESET_KEY, "1");
+    }
+
     function sleep(ms) {
         return new Promise((resolve) => setTimeout(resolve, ms));
     }

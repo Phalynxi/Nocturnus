@@ -1162,3 +1162,192 @@ body.spotui-spotify-enabled .playlist-playlist-playlistContent {
     --spotui-accent: var(--spice-button, #1889B0);
     --spotui-accent-rgb: var(--spice-rgb-button, 24, 137, 176);
 }
+
+/* ── SHELL MATCH ──────────────────────────────────────────────────────────
+   The desk's shapes on SpoTUI's terminal: the player bar is a floating
+   island like the shell's, panels and buttons take the shell's radii, and
+   the grounds are the terminal's black, so the bar and the panels sit with
+   the rest; only the accents are mixed from the palette (--spice-*), which
+   still follows the wallpaper. `--noct-ink` is the accent lifted towards
+   white: a dark palette's accent would sink into the black as text. */
+:root {
+    --noct-ink: color-mix(in srgb, var(--spice-button, #1889B0) 40%, white);
+    --noct-line: rgb(255 255 255 / 0.09);
+    --noct-ground: rgb(0 0 0 / 0.82);
+    --noct-raised: rgb(255 255 255 / 0.05);
+    --noct-radius: 18px;
+    --noct-radius-small: 10px;
+}
+
+/* The player bar: an island floating off the bottom edge, not a strip.
+   Spotify paints its own player colour (the palette's slate) on the
+   wrappers; cleared, so only the island's black shows. */
+.Root__now-playing-bar,
+.Root__now-playing-bar > *,
+.Root__now-playing-bar .main-nowPlayingBar-container,
+.Root__now-playing-bar footer {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+.Root__now-playing-bar {
+    bottom: 12px !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: calc(100vw - 24px) !important;
+    height: 78px !important;
+    border-radius: var(--noct-radius) !important;
+    overflow: hidden !important;
+    box-shadow: 0 10px 30px rgb(0 0 0 / 0.45) !important;
+}
+
+.Root__now-playing-bar .main-nowPlayingBar-container,
+.Root__now-playing-bar .main-nowPlayingBar-nowPlayingBar {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+}
+
+.Root__now-playing-bar .main-nowPlayingBar-nowPlayingBar {
+    background: var(--player-bar-background, var(--noct-ground)) !important;
+    backdrop-filter: blur(24px) saturate(1.2);
+    border: 1px solid var(--player-bar-border-color, var(--noct-line)) !important;
+    border-radius: var(--noct-radius) !important;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06) !important;
+    padding: 0 14px !important;
+}
+
+.Root__now-playing-bar .main-trackInfo-name {
+    color: var(--player-bar-text-color, var(--spice-text, #eef2f7)) !important;
+    font-weight: 600;
+}
+
+.Root__now-playing-bar .main-nowPlayingWidget-coverArt,
+.Root__now-playing-bar .cover-art,
+.Root__now-playing-bar .main-coverSlotCollapsed-container img {
+    border-radius: var(--noct-radius-small) !important;
+    overflow: hidden !important;
+}
+
+.Root__now-playing-bar .main-nowPlayingBar-container button,
+.Root__now-playing-bar .main-nowPlayingBar-container [role="button"],
+.Root__now-playing-bar .volume-bar__icon-button {
+    border-radius: var(--noct-radius-small) !important;
+    color: var(--player-bar-text-color, var(--noct-ink)) !important;
+    transition: background 120ms ease, color 120ms ease, transform 120ms ease;
+}
+
+.Root__now-playing-bar .main-nowPlayingBar-container button:hover,
+.Root__now-playing-bar .main-nowPlayingBar-container [role="button"]:hover {
+    background: color-mix(in srgb, var(--spice-button, #1889B0) 22%, transparent) !important;
+    opacity: 1;
+}
+
+/* Play/pause: the one solid shape on the bar, a disc in the ink. Spelled
+   out to outrank the bar's rule for every button. */
+.Root__now-playing-bar .main-nowPlayingBar-container button[data-testid="control-button-playpause"] {
+    border-radius: 50% !important;
+    background: var(--noct-ink) !important;
+    color: var(--spice-main, #151b1f) !important;
+}
+
+.Root__now-playing-bar .main-nowPlayingBar-container button[data-testid="control-button-playpause"]:hover {
+    transform: scale(1.06);
+    background: white !important;
+}
+
+.Root__now-playing-bar .main-nowPlayingBar-container button[data-testid="control-button-playpause"] svg {
+    fill: currentColor !important;
+}
+
+/* The progress: a rounded track, the fill running from the accent to the
+   ink. */
+.Root__now-playing-bar .x-progressBar-progressBarBg {
+    background: color-mix(in srgb, var(--spice-text, #eef2f7) 12%, transparent) !important;
+    border-radius: 999px !important;
+}
+
+.Root__now-playing-bar .x-progressBar-progressFillColor,
+.Root__now-playing-bar .x-progressBar-fillColor {
+    background: var(--progress-bar-foreground,
+        linear-gradient(90deg, var(--spice-button, #1889B0), var(--noct-ink))) !important;
+    border-radius: 999px !important;
+}
+
+.Root__now-playing-bar .x-progressBar-handle {
+    background: var(--noct-ink) !important;
+    border-radius: 50% !important;
+}
+
+.Root__now-playing-bar [data-testid="playback-progressbar"] .progress-bar {
+    --progress-bar-height: 4px;
+    --spotui-fill-height: 4px;
+}
+
+/* Room under the content for the floating bar. */
+body.spotui-spotify-enabled .main-view-container {
+    padding-bottom: 104px !important;
+}
+
+/* ── TERMINAL ─────────────────────────────────────────────────────────── */
+
+#spotui-input {
+    caret-color: var(--noct-ink) !important;
+}
+
+.spotui-control-btn,
+.spotui-banner-link-btn,
+#spotui-onboarding-next,
+#spotui-onboarding-skip,
+#spotui-onboarding-continue {
+    border-radius: var(--noct-radius-small) !important;
+    border: 1px solid var(--noct-line) !important;
+    background: var(--noct-raised) !important;
+    color: var(--spice-text, #eef2f7) !important;
+    transition: background 120ms ease, border-color 120ms ease;
+}
+
+.spotui-control-btn:hover,
+.spotui-banner-link-btn:hover {
+    background: color-mix(in srgb, var(--spice-button, #1889B0) 30%, transparent) !important;
+    border-color: var(--noct-ink) !important;
+}
+
+/* The panels the commands open: cards in the desk's glass. */
+#spotui-popup,
+#spotui-help-panel,
+#spotui-about-panel,
+#spotui-theme-panel,
+#spotui-search-panel,
+#spotui-playlist-panel,
+#spotui-playlist-info-popup,
+#spotui-onboarding-panel {
+    border-radius: var(--noct-radius) !important;
+    border: 1px solid var(--noct-line) !important;
+    background: var(--noct-ground) !important;
+    backdrop-filter: blur(24px) saturate(1.2);
+    box-shadow: 0 18px 50px rgb(0 0 0 / 0.5) !important;
+}
+
+/* Spotify's own pages, when shown: the desk's corners on art and cards. */
+body.spotui-spotify-enabled .main-cardImage-image,
+body.spotui-spotify-enabled .main-entityHeader-image,
+body.spotui-spotify-enabled [data-encore-id="card"] {
+    border-radius: var(--noct-radius-small) !important;
+}
+
+body.spotui-spotify-enabled .main-trackList-trackListRow:hover {
+    background: color-mix(in srgb, var(--spice-button, #1889B0) 18%, transparent) !important;
+    border-radius: var(--noct-radius-small) !important;
+}
+
+/* Thin rounded scrollbars in the ink. */
+*::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--noct-ink) 35%, transparent) !important;
+    border-radius: 999px !important;
+}
+
+::selection {
+    background: color-mix(in srgb, var(--spice-button, #1889B0) 55%, transparent);
+    color: white;
+}
