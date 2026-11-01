@@ -2502,15 +2502,28 @@ def write_spicetify_colors(colors):
     Guarded on spicetify rather than spotify. It never runs `spicetify
     apply`, which re-patches the client and restarts it; `refresh_spotify`
     carries the scheme into a client already patched.
+
+    Returns whether the file changed. The same palette pushed again (a shell
+    reload, the same wallpaper picked twice) writes the same file, and then
+    there is nothing for Spotify to restart for.
     """
     if not shutil.which("spicetify"):
-        return
+        return False
+    scheme = build_spicetify_colors(colors)
+    try:
+        with open(SPICETIFY_COLORS_FILE, "r", encoding="utf-8") as handle:
+            if handle.read() == scheme:
+                return False
+    except OSError:
+        pass
     try:
         os.makedirs(SPICETIFY_THEME_DIR, exist_ok=True)
         with open(SPICETIFY_COLORS_FILE, "w", encoding="utf-8") as handle:
-            handle.write(build_spicetify_colors(colors))
+            handle.write(scheme)
     except OSError as error:
         sys.stderr.write(f"Cannot write Spotify's colour scheme: {error}\n")
+        return False
+    return True
 
 
 def refresh_spotify():
@@ -3991,35 +4004,44 @@ def hue_of(red, green, blue):
     return (raw * 60.0) % 360.0
 
 
-def accent_penalty(hue, sat, lum):
-    """How much a hue fights the desk, as a 0..1 deduction.
+def neutral_accent(neutrals):
+    """A grey for a picture that is mostly grey or black.
 
-    Muddy is the enemy: yellow mustards and dark browns read as neglect at
-    small sizes, however dominant they are in the picture. Loud pure yellow
-    is nearly as bad. Cool greens and teals, and honest reds, wear well —
-    they lose nothing.
+    The neutrals' own average, so a warm charcoal stays warm and a blue-black
+    stays cool, lifted to a mid lightness: the accent marks things on a
+    near-black ground and has to show there.
     """
-    yellow = 30.0 <= hue < 72.0
-    brown = 8.0 <= hue < 30.0
-    if yellow:
-        return 0.34 if sat < 0.55 else 0.18
-    if brown and lum < 0.45:
-        return 0.24
-    return 0.0
+    total = sum(c["weight"] for c in neutrals)
+    if total <= 0:
+        return NEUTRAL_ACCENT
+    red = sum(c["r"] * c["weight"] for c in neutrals) / total
+    green = sum(c["g"] * c["weight"] for c in neutrals) / total
+    blue = sum(c["b"] * c["weight"] for c in neutrals) / total
+    lum = luminance(red, green, blue)
+    if lum <= 0.02:
+        return {"hex": "#8A8F98", "r": 138, "g": 143, "b": 152}
+    target = min(max(lum, 0.52), 0.68)
+    scale = target / lum
+    red, green, blue = (min(255, round(channel * scale)) for channel in (red, green, blue))
+    return {"hex": rgb_to_hex(red, green, blue), "r": red, "g": green, "b": blue}
 
 
 def pick_accent(swatches, prefer="balanced"):
-    """Choose an accent color, weighting by how common it actually is.
+    """Choose the accent: the most present, most vibrant colour in the picture,
+    or a grey when the picture is more grey and black than colour.
 
-    ``prefer`` controls the trade-off between saturation and frequency:
+    1. Every swatch is grey/black (barely saturated, or too dark for its hue
+       to show) or coloured. When the grey and black cover more of the
+       picture than the colour does, the accent is a grey drawn from them
+       (:func:`neutral_accent`).
+    2. Otherwise the coloured swatches are grouped into hue families of 30°,
+       and the family with the most presence, boosted by how vivid it is on
+       average, wins.
+    3. Within it, the shade that is vivid and of a usable lightness, weighed
+       by how much of the family it makes up.
 
-    ``vibrant``  — maximise saturation (legacy behaviour).
-    ``balanced`` — favour frequent hues, penalise tiny bright highlights like
-        red lava against a dark volcano.  This is the default.
-    ``subtle``   — push saturation down further, lean hard on frequency.
-
-    For a volcano scene whose red lava is a small bright patch, ``balanced``
-    and ``subtle`` will pick a darker, more frequent tone instead.
+    ``prefer`` (the ``accentMode`` setting) sets how much vividness counts
+    against presence: ``vibrant`` leans on it, ``subtle`` on presence.
     """
     if not swatches:
         return NEUTRAL_ACCENT
@@ -4031,55 +4053,64 @@ def pick_accent(swatches, prefer="balanced"):
         hex_val = swatch.get("hex", "") if isinstance(swatch, dict) else swatch
         red, green, blue = hex_to_rgb(hex_val)
         count = swatch.get("count", 0) if isinstance(swatch, dict) else 0
-        weight = count / total
         candidates.append({
             "hex": hex_val.upper(),
             "r": red, "g": green, "b": blue,
             "lum": luminance(red, green, blue),
             "sat": saturation(red, green, blue),
             "hue": hue_of(red, green, blue),
-            "weight": weight,
+            "weight": count / total,
         })
 
-    # A picture without real colour — ink drawings, monochrome photography —
-    # drinks a neutral: its loudest swatch is compression noise, and losing
-    # that race would dye a grey picture with some accidental blue.
-    if max(c["sat"] for c in candidates) < 0.30:
-        return NEUTRAL_ACCENT
+    def is_neutral(c):
+        return c["sat"] < 0.18 or c["lum"] < 0.08
 
-    def score_of(c):
-        deduction = accent_penalty(c["hue"], c["sat"], c["lum"])
-        lum_score = 1.0 - abs(c["lum"] - 0.40)
-        freq_weight = 4.0 if prefer == "subtle" else 3.0
-        frequency_bonus = c["weight"] * freq_weight
-        # Penalise very bright colours unless they are actually common.
-        bright_penalty = 0.0
-        if c["lum"] > 0.75 and c["weight"] < 0.05:
-            bright_penalty = (c["lum"] - 0.75) * 3
-        # Penalise rare hot colours (a tiny saturated patch — e.g. red lava
-        # on a dark volcano) so frequency can win out.
-        rare_hot_penalty = 0.0
-        if c["weight"] < 0.03 and c["sat"] > 0.55:
-            rare_hot_penalty = (c["sat"] - 0.55) * 5
-        sat_weight = 1.6 if prefer == "vibrant" else 1.2
-        lum_weight = 0.6 if prefer == "vibrant" else 0.4
-        return (c["sat"] * sat_weight
-                + lum_score * lum_weight
-                + frequency_bonus
-                - bright_penalty
-                - rare_hot_penalty
-                - deduction)
+    neutrals = [c for c in candidates if is_neutral(c)]
+    coloured = [c for c in candidates if not is_neutral(c)]
+    neutral_share = sum(c["weight"] for c in neutrals)
+    if not coloured or neutral_share > 1.0 - neutral_share:
+        return neutral_accent(neutrals or candidates)
 
-    vibrant = [c for c in candidates if c["sat"] > 0.2 and 0.08 < c["lum"] < 0.90]
+    # Hue families, centred so reds either side of 0° fall in one.
+    families = {}
+    for c in coloured:
+        families.setdefault(int(((c["hue"] + 15.0) % 360.0) // 30.0), []).append(c)
 
-    if vibrant:
-        clean = [c for c in vibrant if accent_penalty(
-            c["hue"], c["sat"], c["lum"]) == 0.0]
-        field = clean if clean else vibrant
-        return max(field, key=score_of)
+    vividness = {"vibrant": 1.6, "subtle": 0.5}.get(prefer, 1.0)
 
-    colorful = [c for c in candidates if c["sat"] > 0.1]
-    return max(colorful, key=lambda c: c["sat"]) if colorful else NEUTRAL_ACCENT
+    def presence(members):
+        return sum(m["weight"] for m in members)
+
+    def family_score(members):
+        weight = presence(members)
+        vivid = sum(m["weight"] * m["sat"] for m in members) / weight
+        return weight * (1.0 + vividness * vivid)
+
+    family = max(families.values(), key=family_score)
+    family_weight = presence(family)
+
+    def shade_score(c):
+        usable = 1.0 - min(1.0, abs(c["lum"] - 0.45) * 1.6)
+        return (c["sat"] * vividness + usable) * (0.35 + c["weight"] / family_weight)
+
+    best = max(family, key=shade_score)
+    return lift_accent(best)
+
+
+def lift_accent(c):
+    """The same hue, light enough to show on the near-black ground.
+
+    A picture's most present colour is often a deep one (a navy night, a
+    dark red room); taken as it is, it would vanish as an accent. Scaled up
+    to a floor rather than mixed with white, so the hue keeps its depth.
+    """
+    lum = luminance(c["r"], c["g"], c["b"])
+    floor = 0.32
+    if lum >= floor or lum <= 0.0:
+        return {"hex": c["hex"], "r": c["r"], "g": c["g"], "b": c["b"]}
+    scale = floor / lum
+    red, green, blue = (min(255, round(channel * scale)) for channel in (c["r"], c["g"], c["b"]))
+    return {"hex": rgb_to_hex(red, green, blue), "r": red, "g": green, "b": blue}
 
 
 def read_accent_mode():
@@ -4380,10 +4411,12 @@ def main():
         write_icon_theme(colors)
         write_qt_theme(colors)
         write_vesktop_css(colors)
-        write_spicetify_colors(colors)
+        spotify_changed = write_spicetify_colors(colors)
         write_vscodium_theme(colors)
         update_vscodium_settings(vscodium_palette_settings(colors))
-        refresh_spotify()
+        # Only when its colours moved: a refresh restarts a running client.
+        if spotify_changed:
+            refresh_spotify()
     elif action == "push-terminal-font" and argument:
         push_terminal_font(argument)
     elif action == "apply-vscodium":
