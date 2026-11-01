@@ -92,8 +92,11 @@ if hl.plugin.hyprglass ~= nil then
         blur_strength        = 0.7,    -- default 2.0
 
         -- Edge effects, all raised so the pane still reads at 0.90 opacity.
-        refraction_strength  = 1.0,
-        chromatic_aberration = 0.6,
+        -- No colour fringe: on the bar it split the edges of the windows
+        -- under it into a rainbow line. Refraction softened for the same
+        -- reason.
+        refraction_strength  = 0.6,
+        chromatic_aberration = 0.0,
         fresnel_strength     = 1.0,
         specular_strength    = 1.0,
         edge_thickness       = 0.10,
@@ -118,10 +121,10 @@ if hl.plugin.hyprglass ~= nil then
     -- daemon's underlay above all — keep Hyprland's blur. The threshold sits
     -- between the grounds (0.60 on the bar, 0.86 in the dock) and the pill
     -- shadows (0.50), so the shadows stay matte instead of turning into
-    -- lenses of their own. The bar itself stays out: its refraction pulled
-    -- the tops of open windows into the notch — the wash grew with every
-    -- window behind it — and its own blur rule paints the ground well.
-    hl.plugin.hyprglass.layer("nocturnus-bar",        { exclude = true })
+    -- lenses of their own. The bar wears it too: it once pulled the tops
+    -- of open windows into the notch, but the windows now start below the
+    -- bar's reserve, so only the wallpaper is behind it.
+    hl.plugin.hyprglass.layer("nocturnus-bar",        { mask_threshold = 0.55 })
     hl.plugin.hyprglass.layer("nocturnus-dock",       { mask_threshold = 0.55 })
     hl.plugin.hyprglass.layer("nocturnus-desktop",    { mask_threshold = 0.55 })
     hl.plugin.hyprglass.layer("nocturnus-deck",       { mask_threshold = 0.55 })

@@ -49,7 +49,7 @@ hl.window_rule({
 
     float  = true,
     center = true,
-    size   = {980, 680},
+    size   = {1100, 720},
 })
 
 
