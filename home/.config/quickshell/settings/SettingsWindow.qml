@@ -35,13 +35,20 @@ FloatingWindow {
     // Matched by the window rule in `windowrules.lua`.
     title: "Nocturnus Settings"
 
-    implicitWidth: 980
-    implicitHeight: 680
+    // The bar's glass, made denser for a page of controls (`Theme.veilOf`'s
+    // "pane"); solid when the bar is.
+    readonly property bool glassy: true
+    readonly property string groundStyle: Theme.glass ? "pane" : "classic"
 
-    // Over a frosted ground: translucent where the style says glass, so the
-    // compositor blur behind it lights the pane. A solid style keeps the
-    // island solid.
-    color: Theme.solid ? Theme.island : Qt.rgba(0, 0, 0, 0.86)
+    implicitWidth: 1100
+    implicitHeight: 720
+
+    // Over a frosted ground: the island's tint, mostly opaque on glass so the
+    // cards read against it while the blur behind still shows at the edges.
+    // A solid style keeps the island solid.
+    color: Theme.glass
+        ? Qt.rgba(Theme.islandGround.r, Theme.islandGround.g, Theme.islandGround.b, 0.88)
+        : Theme.island
     visible: root.shown
 
     onVisibleChanged: {

@@ -9,17 +9,20 @@
 
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 
 import "../theme"
 import "../services"
 import "../components"
 
-// Sidebar and page. `SettingsWindow` owns the window; this owns the sections.
+// The sections across the top and one page under them. `SettingsWindow`
+// owns the window; this owns the sections.
 //
 // Settings are filed by what they change, not by how they are applied, so the
-// window rounding is under Appearance rather than on a compositor page. The
-// sidebar is grouped into categories and a long section is split into parts
-// (`TabStrip`): two levels of navigation, no more.
+// window rounding is under Appearance rather than on a compositor page. A
+// section is one scrolling page: its parts follow one another, each under its
+// own heading, rather than hiding behind tabs. Search lists the pages and the
+// part that matched, and opening one scrolls straight to it.
 //
 // Where an option is a shape, the control is a live miniature built from the
 // real components (`PreviewTile`), so it follows the palette and cannot go
@@ -50,21 +53,15 @@ Item {
                  { id: "modules", label: Tr.t("The bar") },
                  { id: "workspaces", label: Tr.t("Workspaces") },
                  { id: "notifications", label: Tr.t("Notifications") }],
-          keywords: "bar island notch height margin width full span workspaces unified layout island bar band notification toast do not disturb silence timeout clock time date seconds format beside running modules layout left right split drag catalogue chip icon ring figure hover shape media claude battery timer volume brightness network wifi bluetooth weather stats cpu updates pet capture record screenshot buttons every screen monitors ground glass classic blur transparent translucent codex",
+          keywords: "bar island notch height margin width full span workspaces unified layout island bar band notification toast do not disturb silence timeout clock time date seconds format beside running modules layout left right split drag catalogue chip icon ring figure hover shape media claude battery timer volume brightness network wifi bluetooth weather stats cpu updates capture record screenshot buttons every screen monitors ground glass classic blur transparent translucent codex",
           page: barPage },
 
         { id: "widgets", category: "shell", icon: "󰕮", label: Tr.t("Desktop"),
           blurb: Tr.t("What sits on the wallpaper, under the windows."),
           tabs: [{ id: "modules", label: Tr.t("Module settings") },
                  { id: "widgets", label: Tr.t("The widgets") }],
-          keywords: "widgets desktop wallpaper widget place drag size shape capsule ground glass classic blur palette ink tray edit arrange clock calendar notes note sticky theme analogue modern opacity weather location place city github contributions username handwriting edges deck pet creature plush paper pixel egg species style spectrum cava visualiser visualizer bars audio music",
+          keywords: "widgets desktop wallpaper widget place drag size shape capsule ground glass classic blur palette ink tray edit arrange clock calendar notes note sticky theme analogue modern opacity weather location place city github contributions username handwriting edges deck spectrum cava visualiser visualizer bars audio music",
           page: widgetsPage },
-
-        { id: "controls", category: "shell", icon: "󰕰", label: Tr.t("Control Centre"),
-          blurb: Tr.t("What the island opens onto when you click it."),
-          tabs: [],
-          keywords: "controls control centre center panel doors buttons row pet games notes board tasks kanban stats blocks grid toggles tiles arrange edit tray wifi bluetooth airplane microphone focus",
-          page: controlsPage },
 
         { id: "dock", category: "shell", icon: "󱂩", label: Tr.t("Dock"),
           blurb: Tr.t("The dock and the applications kept on it."),
@@ -94,7 +91,8 @@ Item {
           blurb: Tr.t("Screen layout, modes and the laptop lid."),
           tabs: [{ id: "arrangement", label: Tr.t("Arrangement") },
                  { id: "screen", label: Tr.t("The screen") },
-                 { id: "lid", label: Tr.t("The lid") }],
+                 // A desktop has no lid to close.
+                 { id: "lid", label: Tr.t("The lid"), when: MonitorService.internalName !== "" }],
           keywords: "displays monitor screen resolution refresh scale rotate transform vrr mirror extend primary lid clamshell laptop close workspaces",
           page: monitorsPage },
 
@@ -127,47 +125,12 @@ Item {
           page: systemPage }
     ]
 
-    // ── THE GUIDE ───────────────────────────────────────────────────────────
-    //
-    // Where the help button takes each page, or one part of it, on the
-    // documentation site. Keyed "section" or "section/part".
-    readonly property string guideRoot: "https://andreumassanet.github.io/nocturnus-docs/"
-    readonly property var guides: ({
-        "bar": "shell/bar/",
-        "bar/island": "shell/island/#settings",
-        "bar/modules": "shell/bar/#arranging",
-        "bar/workspaces": "shell/bar/#size-and-workspaces",
-        "bar/notifications": "shell/island/#notifications",
-        "widgets": "shell/desktop/",
-        "widgets/widgets": "shell/desktop/#arranging",
-        "controls": "shell/control-centre/#arranging",
-        "dock": "shell/dock/#settings",
-        "launcher": "shell/launcher/#settings",
-        "launcher/sigils": "shell/launcher/#modes",
-        "launcher/clipboard": "shell/launcher/#the-clipboard",
-        "appearance": "shell/settings/#the-pages",
-        "appearance/theme": "theming/palettes/",
-        "monitors": "shell/displays/",
-        "monitors/arrangement": "shell/displays/#arrangement",
-        "monitors/screen": "shell/displays/#the-screen",
-        "monitors/lid": "shell/displays/#the-lid",
-        "input": "shell/settings/#the-pages",
-        "keys": "shell/keys-and-packages/#changing-a-key",
-        "session": "shell/lock-and-login/",
-        "session/lock": "shell/lock-and-login/#the-lock-screen",
-        "session/idle": "shell/lock-and-login/#when-you-leave-it-alone",
-        "system": "shell/settings/#profiles",
-        "system/machine": "shell/settings/#language"
-    })
-
-    readonly property string guide: root.guideRoot
-        + (root.guides[`${root.section}/${root.tab}`] ?? root.guides[root.section] ?? "")
-
     // ── NAVIGATION ──────────────────────────────────────────────────────────
     //
     // A history rather than a single id, so a page that links to another can
-    // be left with the back button.
-    property var trail: [{ section: "bar", tab: "island" }]
+    // be left with Back. `tab` is now the part to scroll to, since a section
+    // shows all its parts on one page.
+    property var trail: [{ section: "bar", tab: "" }]
     property int cursor: 0
 
     readonly property string section: root.trail[root.cursor].section
@@ -176,56 +139,48 @@ Item {
     readonly property var current:
         root.sections.find(entry => entry.id === root.section) ?? root.sections[0]
 
-    function firstTab(id: string): string {
-        const entry = root.sections.find(other => other.id === id)
-        return entry && entry.tabs.length > 0 ? entry.tabs[0].id : ""
+    // The parts a section shows, each under its own heading; a section
+    // without parts is one. A part may only apply to some machines (`when`).
+    function partsOf(entry: var): var {
+        const parts = entry.tabs.filter(part => part.when === undefined || part.when)
+        return parts.length > 0 ? parts : [{ id: "", label: "" }]
     }
 
-    // The part each section was last left on.
-    property var visited: ({})
+    readonly property var parts: root.partsOf(root.current)
 
-    function go(id: string, wanted: string): void {
-        const part = wanted !== undefined && wanted !== ""
-            ? wanted : (root.visited[id] ?? root.firstTab(id))
-        if (id === root.section && part === root.tab)
-            return
-        const path = root.trail.slice(0, root.cursor + 1)
-        path.push({ section: id, tab: part })
-        root.trail = path
-        root.cursor = path.length - 1
-        page.contentY = 0
+    function go(id: string, part: string): void {
+        const wanted = part ?? ""
+        if (id !== root.section || wanted !== root.tab) {
+            const path = root.trail.slice(0, root.cursor + 1)
+            path.push({ section: id, tab: wanted })
+            root.trail = path
+            root.cursor = path.length - 1
+        }
+        Qt.callLater(root.reveal)
     }
 
-    function show(part: string): void {
-        if (part === root.tab)
-            return
-        const kept = Object.assign({}, root.visited)
-        kept[root.section] = part
-        root.visited = kept
-        const path = root.trail.slice()
-        path[root.cursor] = { section: root.section, tab: part }
-        root.trail = path
-        page.contentY = 0
+    // Scrolls to the part asked for, or to the top.
+    function reveal(): void {
+        const index = root.parts.findIndex(part => part.id === root.tab)
+        const item = index > 0 ? partList.itemAt(index) : null
+        page.contentY = item ? Math.min(item.y, Math.max(0, page.contentHeight - page.height)) : 0
     }
 
     function back(): void {
         if (root.cursor > 0) {
             root.cursor--
-            page.contentY = 0
-        }
-    }
-
-    function forward(): void {
-        if (root.cursor < root.trail.length - 1) {
-            root.cursor++
-            page.contentY = 0
+            Qt.callLater(root.reveal)
         }
     }
 
     property string filter: ""
 
+    function term(): string {
+        return root.filter.trim().toLowerCase()
+    }
+
     function matches(entry: var): bool {
-        const term = root.filter.trim().toLowerCase()
+        const term = root.term()
         if (term === "")
             return true
         // Labels are translated; keywords are English, so both languages match.
@@ -236,313 +191,399 @@ Item {
             || parts.includes(term)
     }
 
-    readonly property var shown: root.sections.filter(entry => root.matches(entry))
-
-    // Flattened: a heading per non-empty group followed by its sections, so a
-    // single ListView and scroll position covers the whole sidebar.
-    readonly property var sidebar: {
-        const rows = []
-        for (const group of root.categories) {
-            const members = root.shown.filter(entry => entry.category === group.id)
-            if (members.length === 0)
-                continue
-            rows.push({ heading: true, label: group.label, id: `head:${group.id}` })
-            for (const entry of members)
-                rows.push({ heading: false, label: entry.label,
-                            icon: entry.icon, id: entry.id })
-        }
-        return rows
+    // Search results: each matching section, and the part whose name
+    // matches when one does, so Enter or a click lands on it.
+    readonly property var results: {
+        const term = root.term()
+        if (term === "")
+            return []
+        return root.sections.filter(entry => root.matches(entry)).map(entry => {
+            const part = entry.tabs.find(other => other.label.toLowerCase().includes(term))
+            return { id: entry.id, icon: entry.icon, label: entry.label,
+                     blurb: entry.blurb, part: part ? part.id : "",
+                     partLabel: part ? part.label : "" }
+        })
     }
 
-    RowLayout {
+    function open(result: var): void {
+        search.text = ""
+        root.filter = ""
+        root.go(result.id, result.part)
+    }
+
+    ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 14
-        spacing: root.gap
+        anchors.margins: 18
+        spacing: 18
 
-        // ── SIDEBAR ─────────────────────────────────────────────────────────
+        // ── NAVIGATION ──────────────────────────────────────────────────────
+        //
+        // The sections in one capsule across the top, each with its name, the
+        // search beside it. Too many for a narrow window, so the capsule
+        // scrolls sideways rather than wrapping.
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 10
 
-        Rectangle {
-            Layout.preferredWidth: 206
-            Layout.maximumWidth: 206
-            Layout.fillWidth: false
-            Layout.fillHeight: true
-            radius: Theme.radiusLarge
-            color: Theme.islandSurface
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 44
+                radius: 22
+                color: Theme.surfaceIn(QsWindow.window)
+                border.color: Theme.borderIn(QsWindow.window)
+                border.width: 1
 
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 8
-                spacing: 8
+                Flickable {
+                    id: strip
 
-                // ── SIGNATURE ───────────────────────────────────────────────
-                //
-                // The name in spaced caps — the wordmark, not the script —
-                // with its subtitle underneath. No swatch beside it: the
-                // whole window is already painted in the palette.
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    Layout.topMargin: 6
-                    spacing: 1
+                    anchors.fill: parent
+                    anchors.margins: 4
+                    clip: true
+                    contentWidth: tabs.implicitWidth
+                    contentHeight: height
+                    flickableDirection: Flickable.HorizontalFlick
+                    boundsBehavior: Flickable.StopAtBounds
 
-                    Item { Layout.fillWidth: true; implicitHeight: 2 }
-
-                    Text {
-                        Layout.alignment: Qt.AlignHCenter
-                        text: "N O C T U R N U S"
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 15
-                        font.weight: Font.DemiBold
-                        color: Theme.text
+                    // A wheel turns the strip sideways.
+                    WheelHandler {
+                        onWheel: event => strip.contentX = Math.max(0, Math.min(
+                            strip.contentWidth - strip.width, strip.contentX - event.angleDelta.y))
                     }
 
+                    Row {
+                        id: tabs
+
+                        height: parent.height
+                        spacing: 2
+
+                        Repeater {
+                            model: root.sections
+
+                            Rectangle {
+                                id: tab
+
+                                required property var modelData
+
+                                readonly property bool active:
+                                    tab.modelData.id === root.section && root.term() === ""
+
+                                height: tabs.height
+                                width: tabRow.implicitWidth + 28
+                                radius: height / 2
+                                color: tab.active ? Theme.surfaceHoverIn(QsWindow.window)
+                                    : tabHover.hovered ? Theme.surfaceIn(QsWindow.window) : "transparent"
+                                border.color: tab.active ? Theme.borderIn(QsWindow.window) : "transparent"
+                                border.width: 1
+
+                                Behavior on color { ColorAnimation { duration: Theme.durationFast } }
+
+                                Row {
+                                    id: tabRow
+
+                                    anchors.centerIn: parent
+                                    spacing: 8
+
+                                    Text {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: tab.modelData.icon
+                                        font.family: Theme.fontMono
+                                        font.pixelSize: 14
+                                        color: tab.active ? Theme.text : Theme.textMuted
+                                    }
+
+                                    Text {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: tab.modelData.label
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: Theme.fontSizeRegular
+                                        font.weight: tab.active ? Font.DemiBold : Font.Normal
+                                        color: tab.active || tabHover.hovered ? Theme.text : Theme.textMuted
+                                    }
+                                }
+
+                                HoverHandler { id: tabHover; cursorShape: Qt.PointingHandCursor }
+                                TapHandler { onTapped: root.go(tab.modelData.id, "") }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                Layout.preferredWidth: 230
+                Layout.preferredHeight: 44
+                radius: 22
+                color: search.activeFocus ? Theme.surfaceHoverIn(QsWindow.window) : Theme.surfaceIn(QsWindow.window)
+                border.color: search.activeFocus ? Theme.text : Theme.borderIn(QsWindow.window)
+                border.width: 1
+
+                Behavior on color { ColorAnimation { duration: Theme.durationFast } }
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: 16
+                    anchors.rightMargin: 16
+                    spacing: 9
+
                     Text {
-                        Layout.alignment: Qt.AlignHCenter
-                        text: Tr.t("settings")
+                        text: "󰍉"
                         font.family: Theme.fontMono
-                        font.pixelSize: 11
+                        font.pixelSize: 14
                         color: Theme.textMuted
                     }
 
-                    Item { Layout.fillWidth: true; implicitHeight: 2 }
-                }
+                    TextInput {
+                        id: search
 
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 30
-                    radius: 15
-                    color: search.activeFocus ? Theme.islandSurfaceHover : Theme.island
+                        Layout.fillWidth: true
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSizeRegular
+                        color: Theme.text
+                        selectByMouse: true
+                        selectionColor: Theme.accent
+                        selectedTextColor: Theme.accentText
+                        clip: true
+                        focus: true
 
-                    Behavior on color { ColorAnimation { duration: Theme.durationFast } }
+                        onTextEdited: root.filter = text
 
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: 9
-                        anchors.rightMargin: 9
-                        spacing: 8
-
-                        Text {
-                            text: "󰍉"
-                            font.family: Theme.fontMono
-                            font.pixelSize: 12
-                            color: Theme.textMuted
+                        // Escape clears the field first, and closes the
+                        // window only once it is empty.
+                        Keys.onEscapePressed: event => {
+                            if (search.text === "") {
+                                event.accepted = false
+                                return
+                            }
+                            search.text = ""
+                            root.filter = ""
                         }
 
-                        TextInput {
-                            id: search
+                        // Enter opens the first match.
+                        Keys.onReturnPressed: {
+                            if (root.results.length > 0)
+                                root.open(root.results[0])
+                        }
 
-                            Layout.fillWidth: true
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSizeSmall
-                            color: Theme.text
-                            selectByMouse: true
-                            selectionColor: Theme.accent
-                            selectedTextColor: Theme.accentText
-                            clip: true
-                            focus: true
-
-                            onTextEdited: root.filter = text
-
-                            // Escape clears the field first, and closes the
-                            // window only once it is empty.
-                            Keys.onEscapePressed: event => {
-                                if (search.text === "") {
-                                    event.accepted = false
-                                    return
-                                }
-                                search.text = ""
-                                root.filter = ""
-                            }
-
-                            // Enter opens the first match.
-                            Keys.onReturnPressed: {
-                                if (root.shown.length > 0)
-                                    root.go(root.shown[0].id, "")
-                            }
-
-                            Text {
-                                anchors.verticalCenter: parent.verticalCenter
-                                visible: search.text === ""
-                                text: Tr.t("Search settings")
-                                font: search.font
-                                color: Theme.textMuted
-                            }
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: search.text === ""
+                            text: Tr.t("Search")
+                            font: search.font
+                            color: Theme.textMuted
                         }
                     }
                 }
+            }
 
-                ListView {
+            Rectangle {
+                Layout.preferredWidth: 44
+                Layout.preferredHeight: 44
+                radius: 22
+                color: closeHover.hovered ? Theme.surfaceHoverIn(QsWindow.window) : Theme.surfaceIn(QsWindow.window)
+                border.color: Theme.borderIn(QsWindow.window)
+                border.width: 1
+
+                Text {
+                    anchors.fill: parent
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    text: "󰅖"
+                    font.family: Theme.fontMono
+                    font.pixelSize: 15
+                    color: Theme.text
+                }
+
+                HoverHandler { id: closeHover; cursorShape: Qt.PointingHandCursor }
+                TapHandler { onTapped: root.closed() }
+            }
+        }
+
+        // ── TITLE ───────────────────────────────────────────────────────────
+
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.leftMargin: 8
+            spacing: 12
+
+            Rectangle {
+                visible: root.cursor > 0 && root.term() === ""
+                Layout.preferredWidth: 32
+                Layout.preferredHeight: 32
+                radius: 16
+                color: backHover.hovered ? Theme.surfaceHoverIn(QsWindow.window) : "transparent"
+
+                Text {
+                    anchors.fill: parent
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    text: "󰅁"
+                    font.family: Theme.fontMono
+                    font.pixelSize: 15
+                    color: Theme.text
+                }
+
+                HoverHandler { id: backHover; cursorShape: Qt.PointingHandCursor }
+                TapHandler { onTapped: root.back() }
+            }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 2
+
+                Text {
+                    text: root.term() !== "" ? Tr.t("Search") : root.current.label
+                    font.family: Theme.fontDisplay
+                    font.pixelSize: 28
+                    font.weight: Font.Bold
+                    color: Theme.text
+                }
+
+                Text {
                     Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    clip: true
-                    spacing: 1
-                    model: root.sidebar
-                    boundsBehavior: Flickable.StopAtBounds
-
-                    delegate: Item {
-                        id: entry
-
-                        required property var modelData
-
-                        readonly property bool active:
-                            !entry.modelData.heading
-                            && entry.modelData.id === root.section
-
-                        width: ListView.view.width
-                        height: entry.modelData.heading ? 24 : 30
-
-                        // Group heading; not clickable.
-                        Text {
-                            visible: entry.modelData.heading
-                            anchors.left: parent.left
-                            anchors.leftMargin: 12
-                            anchors.bottom: parent.bottom
-                            anchors.bottomMargin: 3
-                            text: entry.modelData.label
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSizeLabel
-                            font.weight: Font.DemiBold
-                            font.letterSpacing: 0.8
-                            color: Theme.textMuted
-                            opacity: 0.7
-                        }
-
-                        Rectangle {
-                            visible: !entry.modelData.heading
-                            anchors.fill: parent
-                            radius: 15
-                            color: entry.active ? Theme.accent
-                                : entryMouse.containsMouse ? Theme.islandSurfaceHover : "transparent"
-
-                            Behavior on color { ColorAnimation { duration: Theme.durationFast } }
-
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.leftMargin: 11
-                                anchors.rightMargin: 11
-                                spacing: 11
-
-                                Text {
-                                    text: entry.modelData.icon ?? ""
-                                    font.family: Theme.fontMono
-                                    font.pixelSize: 13
-                                    color: entry.active ? Theme.accentText
-                                        : entryMouse.containsMouse ? Theme.text : Theme.textMuted
-                                }
-
-                                Text {
-                                    Layout.fillWidth: true
-                                    text: entry.modelData.label
-                                    elide: Text.ElideRight
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSizeSmall
-                                    font.weight: entry.active ? Font.DemiBold : Font.Normal
-                                    color: entry.active ? Theme.accentText : Theme.text
-                                }
-                            }
-
-                            MouseArea {
-                                id: entryMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: root.go(entry.modelData.id, "")
-                            }
-                        }
-                    }
+                    text: root.term() !== ""
+                        ? (root.results.length === 1 ? Tr.t("1 page") : `${root.results.length} ${Tr.t("pages")}`)
+                        : root.current.blurb
+                    elide: Text.ElideRight
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSizeSmall + 1
+                    color: Theme.textMuted
                 }
             }
         }
 
-        // ── PAGE ────────────────────────────────────────────────────────────
+        // ── RESULTS ─────────────────────────────────────────────────────────
 
-        ColumnLayout {
+        ListView {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: root.gap
+            visible: root.term() !== ""
+            clip: true
+            spacing: 8
+            model: root.results
+            boundsBehavior: Flickable.StopAtBounds
 
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 6
+            delegate: Rectangle {
+                id: result
 
-                IconButton {
-                    icon: "󰅁"
-                    iconSize: 13
-                    opacity: root.cursor > 0 ? 1 : 0.3
-                    onClicked: root.back()
+                required property var modelData
+
+                width: ListView.view.width
+                height: 64
+                radius: Theme.radiusLarge
+                color: resultHover.hovered ? Theme.surfaceHoverIn(QsWindow.window) : Theme.surfaceIn(QsWindow.window)
+                border.color: Theme.borderIn(QsWindow.window)
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: 16
+                    anchors.rightMargin: 16
+                    spacing: 14
+
+                    Text {
+                        text: result.modelData.icon
+                        font.family: Theme.fontMono
+                        font.pixelSize: 18
+                        color: Theme.text
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 2
+
+                        Text {
+                            text: result.modelData.partLabel !== ""
+                                ? `${result.modelData.label}  ›  ${result.modelData.partLabel}`
+                                : result.modelData.label
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSizeRegular
+                            font.weight: Font.DemiBold
+                            color: Theme.text
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            text: result.modelData.blurb
+                            elide: Text.ElideRight
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSizeSmall
+                            color: Theme.textMuted
+                        }
+                    }
+
+                    Text {
+                        text: "󰅂"
+                        font.family: Theme.fontMono
+                        font.pixelSize: 14
+                        color: Theme.textMuted
+                    }
                 }
 
-                IconButton {
-                    icon: "󰅂"
-                    iconSize: 13
-                    opacity: root.cursor < root.trail.length - 1 ? 1 : 0.3
-                    onClicked: root.forward()
-                }
-
-                Item { Layout.fillWidth: true }
-
-                // This page, or this part of it, on the documentation site.
-                IconButton {
-                    icon: "󰋗"
-                    iconSize: 13
-                    onClicked: Qt.openUrlExternally(root.guide)
-                }
-
-                IconButton {
-                    icon: "󰅖"
-                    iconSize: 13
-                    onClicked: root.closed()
-                }
+                HoverHandler { id: resultHover; cursorShape: Qt.PointingHandCursor }
+                TapHandler { onTapped: root.open(result.modelData) }
             }
 
-            // One scroll area for the whole page, hero and strip included;
-            // sections never scroll on their own.
-            Flickable {
-                id: page
+            Text {
+                anchors.centerIn: parent
+                visible: root.results.length === 0
+                text: Tr.t("Nothing matches")
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeRegular
+                color: Theme.textMuted
+            }
+        }
 
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                clip: true
-                contentWidth: width
-                contentHeight: body.implicitHeight
-                boundsBehavior: Flickable.StopAtBounds
+        // ── SECTION ─────────────────────────────────────────────────────────
+        //
+        // Every part of the section on one scroll, each under its name.
+        Flickable {
+            id: page
 
-                ColumnLayout {
-                    id: body
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            visible: root.term() === ""
+            clip: true
+            contentWidth: width
+            contentHeight: body.implicitHeight + 24
+            boundsBehavior: Flickable.StopAtBounds
 
-                    width: page.width
-                    spacing: root.gap
+            Behavior on contentY {
+                enabled: !page.moving
+                NumberAnimation { duration: Theme.durationMedium; easing.type: Theme.easing }
+            }
 
-                    SettingsHero {
+            ColumnLayout {
+                id: body
+
+                x: 8
+                width: page.width - 16
+                spacing: 30
+
+                Repeater {
+                    id: partList
+
+                    model: root.parts
+
+                    ColumnLayout {
+                        id: part
+
+                        required property var modelData
+
                         Layout.fillWidth: true
-                        icon: root.current.icon
-                        title: root.current.label
-                    }
+                        spacing: 14
 
-                    TabStrip {
-                        Layout.fillWidth: true
-                        tabs: root.current.tabs
-                        current: root.tab
-                        onPicked: id => root.show(id)
-                    }
+                        Text {
+                            visible: part.modelData.label !== ""
+                            text: part.modelData.label
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSizeLarge + 2
+                            font.weight: Font.DemiBold
+                            color: Theme.text
+                        }
 
-                    Loader {
-                        id: pageLoader
-
-                        Layout.fillWidth: true
-                        sourceComponent: root.current.page
-
-                        onLoaded: pageLoader.item.tab = Qt.binding(() => root.tab)
-
-                        onSourceComponentChanged: pageFade.restart()
-
-                        NumberAnimation {
-                            id: pageFade
-                            target: pageLoader
-                            property: "opacity"
-                            from: 0
-                            to: 1
-                            duration: Theme.durationFast
-                            easing.type: Theme.easing
+                        Loader {
+                            Layout.fillWidth: true
+                            sourceComponent: root.current.page
+                            onLoaded: item.tab = part.modelData.id
                         }
                     }
                 }
@@ -554,13 +595,6 @@ Item {
     // Widgets are arranged on the desktop itself, behind this window.
     Component { id: widgetsPage;    WidgetsSection {
         onArranging: root.closed() } }
-    // Open the control centre before closing, while this panel still exists
-    // to emit the request.
-    Component { id: controlsPage;   ControlsSection {
-        onArranging: {
-            root.panelRequested("controls")
-            root.closed()
-        } } }
     Component { id: dockPage;       DockSection {} }
     Component { id: launcherPage;   LauncherSection {} }
     Component { id: appearancePage; AppearanceSection {
