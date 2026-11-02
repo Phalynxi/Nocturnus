@@ -72,13 +72,16 @@ Item {
         height: root.size + 2
 
         // Claude, Codex and the pet have no font glyph and draw their own
-        // mark at glyph size.
+        // mark at glyph size. A font's glyph fills only about three quarters
+        // of its pixel size, the rest is the em box's room, while a drawn
+        // mark fills its box: the marks are drawn at that share so they
+        // stand as tall as the icons beside them.
         Loader {
             anchors.centerIn: parent
             active: !root.ring && root.moduleId === "claude"
             sourceComponent: ClaudeMark {
-                width: root.size
-                height: root.size
+                width: Math.round(root.size * 0.76)
+                height: Math.round(root.size * 0.76)
                 color: root.tint
             }
         }
@@ -87,8 +90,8 @@ Item {
             anchors.centerIn: parent
             active: !root.ring && root.moduleId === "codex"
             sourceComponent: CodexMark {
-                width: root.size
-                height: root.size
+                width: Math.round(root.size * 0.76)
+                height: Math.round(root.size * 0.76)
                 color: root.tint
             }
         }
