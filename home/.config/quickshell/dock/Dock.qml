@@ -219,37 +219,50 @@ PanelWindow {
         Loader {
             anchors.fill: parent
             anchors.margins: -Theme.shadowBarRange
-            active: SettingsService.barShadow
+            // Not cut into the edge, where the island casts none either.
+            active: SettingsService.barShadow && !DockService.attached
             sourceComponent: caster
         }
 
-        // Classic is the island's black, at the Background setting's opacity
-        // over the compositor's blur; glass is the terminal's ground, with
-        // its lit edge. The border keeps its own alpha, so a translucent
-        // capsule still has an edge.
+        // The island's own ground and corners: the same glass, the same
+        // sheen and, on the bottom edge, cut into it with the same shoulders,
+        // so the dock reads as the island's counterpart below. Classic is the
+        // island's black at the Background setting's opacity.
         Rectangle {
             id: ground
 
+            readonly property real round: Math.min(height / 2, Theme.radiusLarge + 4)
+
             anchors.fill: parent
-            radius: Theme.dockRadius
-            color: Theme.dockGlass ? Theme.dockGroundOf(Theme.dockStyle)
+            radius: ground.round
+            bottomLeftRadius: DockService.attached ? 0 : ground.round
+            bottomRightRadius: DockService.attached ? 0 : ground.round
+            color: Theme.dockGlass ? Theme.groundOf(Theme.dockStyle)
                 : Qt.rgba(Theme.island.r, Theme.island.g, Theme.island.b,
                           SettingsService.dockOpacity / 100)
             border.color: Theme.rimOf(Theme.dockStyle)
-            border.width: 1
-
-            // A faint white wash, the same move the bar's glass makes, so the
-            // capsule reads as a lit material rather than a dark one.
-            Rectangle {
-                anchors.fill: parent
-                radius: Theme.dockRadius
-                color: Theme.dockGlass ? Qt.rgba(1, 1, 1, 0.07)
-                    : "transparent"
-            }
+            border.width: Theme.dockGlass || DockService.attached ? 0 : 1
 
             GlassSheen {
                 shape: ground
                 visible: Theme.dockGlass
+                edges: !DockService.attached
+            }
+        }
+
+        // The shoulders into the bottom edge: the island's notch fillets,
+        // turned over.
+        Repeater {
+            model: DockService.attached ? [true, false] : []
+
+            NotchFillet {
+                required property bool modelData
+
+                x: modelData ? -width : shelf.width
+                y: shelf.height - height
+                rotation: 180
+                mirrored: !modelData
+                color: ground.color
             }
         }
 
