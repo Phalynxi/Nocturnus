@@ -93,16 +93,18 @@ if hl.plugin.hyprglass ~= nil then
 
         -- Edge effects, all raised so the pane still reads at 0.90 opacity.
         -- No colour fringe: on the bar it split the edges of the windows
-        -- under it into a rainbow line. Refraction softened for the same
-        -- reason.
-        refraction_strength  = 0.6,
+        -- under it into a rainbow line. Refraction kept low for the same
+        -- reason: the edge bends light in from past the shape, and the bar
+        -- sits just above the windows' tops.
+        refraction_strength  = 0.2,
         chromatic_aberration = 0.0,
         fresnel_strength     = 1.0,
         specular_strength    = 1.0,
-        edge_thickness       = 0.10,
+        edge_thickness       = 0.06,
 
-        -- Less magnification; it smears at this blur level.
-        lens_distortion      = 0.3,
+        -- No magnification: it samples from beyond the shape too, and
+        -- pulled the windows' tops into the bar's lower edge.
+        lens_distortion      = 0.0,
 
         -- Default tint at half alpha.
         tint_color           = 0x8899aa11,
