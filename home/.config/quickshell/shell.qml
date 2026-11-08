@@ -21,7 +21,6 @@ import "./capture"
 import "./components"
 import "./desktop"
 import "./dock"
-import "./launcher"
 import "./lock"
 import "./services"
 import "./settings"
@@ -40,6 +39,8 @@ ShellRoot {
         void LauncherService.applications
         // Keeps history, so the graph has data before the panel opens.
         void StatsService.ready
+        // Watches that history for heat, memory and disk running too far.
+        void WatchService.ready
         // Re-applies the animation preset and every other overridden
         // Hyprland option.
         void CompositorService.animationPreset
@@ -190,7 +191,7 @@ ShellRoot {
             live: modelData.name === root.liveScreenName
 
             // The dock cannot see the island, so it asks.
-            onLauncherRequested: launcher.toggle()
+            onLauncherRequested: root.island?.toggle("launcher")
         }
     }
 
@@ -281,7 +282,7 @@ ShellRoot {
     GlobalShortcut {
         name: "launcher"
         description: "Open the island launcher"
-        onPressed: launcher.toggle()
+        onPressed: root.island?.toggle("launcher")
     }
 
     // ── LID ─────────────────────────────────────────────────────────────────
@@ -437,24 +438,18 @@ ShellRoot {
     }
 
     // The clipboard and the emoji are launcher modes: pressed again on that
-    // mode it closes, pressed on another mode it switches.
+    // mode it closes, pressed on another mode it switches. The panel reads
+    // the mode from the query prefix, so presetting it switches modes live.
     function openLauncherOn(mode: string): void {
-        launcher.show(SettingsService.launcherPrefix(mode))
-    }
-
-    // The launcher is its own surface now, not an island panel. Bar buttons
-    // ask for it through `ModuleService`, as they ask for panels.
-    Launcher {
-        id: launcher
-    }
-
-    Connections {
-        target: ModuleService
-
-        function onPanelToggled(panel: string): void {
-            if (panel === "launcher")
-                launcher.toggle()
+        const prefix = SettingsService.launcherPrefix(mode)
+        const open = root.island && root.island.state?.openPanel === "launcher"
+        if (open && LauncherService.modeFor(LauncherService.query ?? "").id === mode) {
+            root.island.toggle("launcher")
+            return
         }
+        LauncherService.query = prefix
+        if (!open)
+            root.island?.toggle("launcher")
     }
 
     GlobalShortcut {
@@ -602,6 +597,15 @@ ShellRoot {
     // one is written, and then never sees it:
     //   qs ipc call shell reload
     // The same two switches as the keys, for anything else to bind.
+    // Gaming mode's word (`hypr/modules/gaming.lua`): "true" or "false".
+    IpcHandler {
+        target: "gaming"
+
+        function set(state: string): void {
+            SettingsService.gaming = state === "true"
+        }
+    }
+
     IpcHandler {
         target: "bar"
 
@@ -637,6 +641,37 @@ ShellRoot {
                 return "usage: qs ipc call desk theme <key> [theme]"
             DesktopService.update(key, { theme: theme === "" ? null : theme })
             return theme === "" ? `${key} on the desk's theme` : `${key} on ${theme}`
+        }
+    }
+
+    IpcHandler {
+        target: "profile"
+
+        function switchTo(id: string): string {
+            if (!id)
+                return "usage: qs ipc call profile switchTo <id>"
+            if (!ProfileService.entry(id))
+                return "no such profile: " + id
+            if (id === ProfileService.active)
+                return "already active: " + id
+            ProfileService.switchTo(id)
+            return "switched to " + id
+        }
+
+        function list(): var {
+            return ProfileService.profiles.map(p => ({ id: p.id, name: p.name, active: p.id === ProfileService.active }))
+        }
+
+        function cycle(): string {
+            if (ProfileService.profiles.length === 0)
+                return "no profiles"
+            const currentIndex = ProfileService.profiles.findIndex(p => p.id === ProfileService.active)
+            if (currentIndex === -1)
+                return "no active profile"
+            const nextIndex = (currentIndex + 1) % ProfileService.profiles.length
+            const nextId = ProfileService.profiles[nextIndex].id
+            ProfileService.switchTo(nextId)
+            return "cycled to " + ProfileService.profiles[nextIndex].name
         }
     }
 

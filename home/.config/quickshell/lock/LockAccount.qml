@@ -8,7 +8,9 @@
 // ╰──────────────────────────────────────────────────────────────────────────╯
 
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Effects
+import Quickshell.Io
 
 import "../theme"
 import "../services"
@@ -42,6 +44,41 @@ Item {
 
     implicitWidth: pill.width
     implicitHeight: root.pillHeight + 40
+
+    // ── USER LIST ──────────────────────────────────────────────────────────
+
+    // System users (UID >= 1000). Populated once on first wake.
+    property var userList: []
+
+    readonly property Process userLoader: Process {
+        command: ["sh", "-c", "getent passwd | awk -F: '$3 >= 1000 && $3 < 60000 {print $1 \"|\" $5 \"|\" $6}'"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                if (text.trim() === "")
+                    return
+                const lines = text.trim().split("\n").filter(l => l !== "")
+                const users = []
+                for (let i = 0; i < lines.length; i++) {
+                    const parts = lines[i].split("|")
+                    if (parts.length >= 3) {
+                        users.push({ name: parts[0], fullName: parts[1] || parts[0], home: parts[2] })
+                    }
+                }
+                const current = AccountService.user
+                users.sort(function(a, b) {
+                    if (a.name === current) return -1
+                    if (b.name === current) return 1
+                    return 0
+                })
+                root.userList = users
+            }
+        }
+    }
+
+    function loadUsers(): void {
+        if (root.userList.length === 0 && !root.userLoader.running)
+            root.userLoader.running = true
+    }
 
     // ── PILL ────────────────────────────────────────────────────────────────
 
@@ -115,15 +152,81 @@ Item {
                 }
             }
 
-            Avatar {
-                id: picture
+            // ── AVATAR WITH USER DROPDOWN ──────────────────────────────────
+
+            Item {
+                id: avatarWrapper
 
                 x: root.inset
                 anchors.verticalCenter: parent.verticalCenter
                 width: root.face
                 height: root.face
-                source: AccountService.avatar
-                initials: AccountService.initials
+
+                // Blue ring on hover (SDDM style)
+                Rectangle {
+                    id: hoverRing
+
+                    anchors.fill: parent
+                    radius: width / 2
+                    border.width: 2
+                    border.color: Theme.accent
+                    opacity: avatarArea.containsMouse ? 1 : 0
+                    visible: avatarArea.containsMouse
+
+                    Behavior on opacity {
+                        NumberAnimation { duration: Theme.durationFast }
+                    }
+                }
+
+                Avatar {
+                    id: picture
+
+                    anchors.fill: parent
+                    source: AccountService.avatar
+                    initials: AccountService.initials
+                }
+
+                MouseArea {
+                    id: avatarArea
+
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    acceptedButtons: Qt.LeftButton
+                    onClicked: {
+                        if (mouse.button === Qt.LeftButton) {
+                            loadUsers()
+                            userDropdown.popup()
+                        }
+                    }
+                }
+
+                // User dropdown (dropup since we're near bottom)
+                Menu {
+                    id: userDropdown
+
+                    transformOrigin: Item.BottomLeft
+                    x: avatarWrapper.x
+                    y: avatarWrapper.y
+
+                    // Build items from userList when opening
+                    onAboutToShow: {
+                        userDropdown.clear()
+                        for (let i = 0; i < root.userList.length; i++) {
+                            const u = root.userList[i]
+                            const item = userDropdown.addItem(u.fullName)
+                            item.userName = u.name
+                            if (u.name === AccountService.user) {
+                                item.font.bold = true
+                            }
+                            item.triggered.connect(function() {
+                                if (item.userName !== AccountService.user) {
+                                    SessionService.run("switchUser")
+                                }
+                            })
+                        }
+                    }
+                }
             }
 
             // ── AT REST ─────────────────────────────────────────────────────
@@ -131,7 +234,7 @@ Item {
             Column {
                 id: resting
 
-                anchors.left: picture.right
+                anchors.left: avatarWrapper.right
                 anchors.leftMargin: 14
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 1
@@ -164,7 +267,7 @@ Item {
             TextInput {
                 id: field
 
-                anchors.left: picture.right
+                anchors.left: avatarWrapper.right
                 anchors.leftMargin: 18
                 anchors.right: send.left
                 anchors.rightMargin: 12

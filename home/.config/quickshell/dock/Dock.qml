@@ -56,7 +56,11 @@ PanelWindow {
     // mask never lags a frame behind.
     property bool peeked: false
 
-    readonly property bool out: !DockService.autohide || root.peeked
+    // Hiding only hides from windows: on an empty workspace there is nothing
+    // to cover, so the dock stays out until a window opens.
+    readonly property bool clear: !HyprlandService.isOccupied(HyprlandService.activeId)
+
+    readonly property bool out: !DockService.autohide || root.peeked || root.clear
         || DockService.dragging !== "" || root.menuItem !== null
 
     property real slide: root.out ? 0 : 1
@@ -219,50 +223,31 @@ PanelWindow {
         Loader {
             anchors.fill: parent
             anchors.margins: -Theme.shadowBarRange
-            // Not cut into the edge, where the island casts none either.
-            active: SettingsService.barShadow && !DockService.attached
+            active: Theme.barShadows
             sourceComponent: caster
         }
 
-        // The island's own ground and corners: the same glass, the same
-        // sheen and, on the bottom edge, cut into it with the same shoulders,
-        // so the dock reads as the island's counterpart below. Classic is the
-        // island's black at the Background setting's opacity.
+        // The island's own ground and corners, floating: the same glass and
+        // the same sheen, so the dock reads as the island's counterpart below.
+        // Classic is the island's black at the Background setting's opacity.
         Rectangle {
             id: ground
 
-            readonly property real round: Math.min(height / 2, Theme.radiusLarge + 4)
+            // A squircle's proportion rather than a capsule: corners about a
+            // third of the height, so the ends stay square-shouldered.
+            readonly property real round: Math.round(height * 0.3)
 
             anchors.fill: parent
             radius: ground.round
-            bottomLeftRadius: DockService.attached ? 0 : ground.round
-            bottomRightRadius: DockService.attached ? 0 : ground.round
             color: Theme.dockGlass ? Theme.groundOf(Theme.dockStyle)
                 : Qt.rgba(Theme.island.r, Theme.island.g, Theme.island.b,
                           SettingsService.dockOpacity / 100)
             border.color: Theme.rimOf(Theme.dockStyle)
-            border.width: Theme.dockGlass || DockService.attached ? 0 : 1
+            border.width: Theme.dockGlass ? 0 : 1
 
             GlassSheen {
                 shape: ground
                 visible: Theme.dockGlass
-                edges: !DockService.attached
-            }
-        }
-
-        // The shoulders into the bottom edge: the island's notch fillets,
-        // turned over.
-        Repeater {
-            model: DockService.attached ? [true, false] : []
-
-            NotchFillet {
-                required property bool modelData
-
-                x: modelData ? -width : shelf.width
-                y: shelf.height - height
-                rotation: 180
-                mirrored: !modelData
-                color: ground.color
             }
         }
 
@@ -377,24 +362,53 @@ PanelWindow {
     Component {
         id: caster
 
-        // `layer.effect` replaces this item's rendering, so only the blurred
-        // shape reaches the screen. The copy is grown by `shadowSpread` so the
-        // falloff sits outside the capsule.
+        // Under a ground that lets the screen through, the capsule is cut out
+        // of its own shadow, as the bar's is: otherwise the shadow shows
+        // through the glass and darkens the dock from inside.
         Item {
-            opacity: Theme.shadowOpacity
-
-            layer.enabled: true
+            layer.enabled: !Theme.dockSolid
             layer.effect: MultiEffect {
-                blurEnabled: true
-                blur: 1
-                blurMax: Theme.shadowBarRange - Theme.shadowBarSpread
+                maskEnabled: true
+                maskInverted: true
+                maskSource: cutout
+                maskThresholdMin: 0.5
+                maskSpreadAtMin: 1
             }
 
-            Rectangle {
+            Item {
+                id: cutout
+
                 anchors.fill: parent
-                anchors.margins: Theme.shadowBarRange - Theme.shadowBarSpread
-                radius: Theme.dockRadius + Theme.shadowBarSpread
-                color: Theme.shadowColor
+                visible: false
+                layer.enabled: !Theme.dockSolid
+
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: Theme.shadowBarRange
+                    radius: ground.round
+                }
+            }
+
+            // `layer.effect` replaces this item's rendering, so only the
+            // blurred shape reaches the screen. The copy is grown by
+            // `shadowSpread` so the falloff sits outside the capsule.
+            Item {
+                anchors.fill: parent
+                opacity: Theme.shadowOpacity
+
+                layer.enabled: true
+                layer.effect: MultiEffect {
+                    blurEnabled: true
+                    blur: 1
+                    blurMax: Theme.shadowBarRange - Theme.shadowBarSpread
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: Theme.shadowBarRange - Theme.shadowBarSpread
+                    radius: ground.round + Theme.shadowBarSpread
+                    color: Theme.shadowColor
+                }
             }
         }
     }

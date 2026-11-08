@@ -10,6 +10,7 @@
 import QtQuick
 
 import "../theme"
+import "../services"
 
 // Laid over a ground in the glass style (`Theme.glass`) and under what is on
 // it: the thick edge of a pane — light caught just inside the rim, fading in
@@ -17,6 +18,9 @@ import "../theme"
 // corners, since `clip` would cut it square.
 Item {
     id: root
+
+    // Gone in gaming mode with the compositor's glass it lights.
+    opacity: SettingsService.gaming ? 0 : 1
 
     required property Item shape
     // Off where the ground runs on past its own rectangle (the attached

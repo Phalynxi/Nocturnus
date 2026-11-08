@@ -329,10 +329,13 @@ Singleton {
 
     // Kept in settings so it survives a restart. Notifications are still
     // recorded while it is on; they just do not take the island.
-    readonly property bool doNotDisturb: SettingsService.doNotDisturb
+    // On while gaming mode is, without touching the stored choice, so it
+    // comes back as it was when the game ends (`SettingsService.gaming`).
+    readonly property bool doNotDisturb: SettingsService.doNotDisturb || SettingsService.gaming
 
     function toggleDoNotDisturb(): void {
-        const silence = !root.doNotDisturb
+        // The stored choice, which gaming mode leaves alone.
+        const silence = !SettingsService.doNotDisturb
         SettingsService.set("doNotDisturb", silence)
         if (silence)
             root.dismiss()

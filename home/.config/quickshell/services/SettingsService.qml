@@ -284,6 +284,13 @@ Singleton {
     // replay over a file another instance has written since.
     property bool arrived: false
 
+    // Gaming mode (`hypr/modules/gaming.lua`, SUPER + SHIFT + G) is on: the
+    // compositor's blur and glass are off, and the shell drops its own blurs
+    // and the glass's sheen with them, keeping its colours and opacity
+    // (`Theme.barShadows`, `GlassSheen`). Told over IPC (`shell.qml`), never
+    // stored.
+    property bool gaming: false
+
     // No settings file existed at startup; `ProfileService` then starts on
     // the first bundled profile.
     property bool fresh: false

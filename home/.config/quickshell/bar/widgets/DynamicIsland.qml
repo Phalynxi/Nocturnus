@@ -54,18 +54,9 @@ Rectangle {
         && islandState.layer === islandState.layerModules && !root.hosted
     // Solid, a floating island at rest is a shade off the black; on glass it
     // is the capsules' ground, since a lighter veil reads as another material.
-    // Grown past the bar's band, the island lies over the tops of the
-    // windows, and the glass would show them through it; there it is the
-    // same tint made nearly opaque. At rest it only covers the wallpaper.
-    readonly property bool overWindows: islandState.expanded
-        || islandState.layer !== islandState.layerModules
-    readonly property color denseGround: Qt.rgba(Theme.islandGround.r,
-        Theme.islandGround.g, Theme.islandGround.b, 0.92)
-
     readonly property color surfaceColor: {
         if (!Theme.solid)
-            return root.overWindows ? root.denseGround
-                : root.lit ? Theme.islandGroundLit : Theme.islandGround
+            return root.lit ? Theme.islandGroundLit : Theme.islandGround
         if (root.lit)
             return Theme.islandSurfaceHover
         return SettingsService.islandAttached ? Theme.islandGround : Theme.islandSurface
@@ -361,9 +352,7 @@ Rectangle {
             return root.paperColor
         if (root.hosted && !Theme.solid)
             return "transparent"
-        if (islandState.expanded)
-            return Theme.solid ? Theme.islandGround : root.denseGround
-        return root.surfaceColor
+        return islandState.expanded ? Theme.islandGround : root.surfaceColor
     }
     border.color: Theme.islandRim
 

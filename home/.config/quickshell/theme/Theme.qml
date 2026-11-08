@@ -84,6 +84,11 @@ QtObject {
 
     // The dock's, the same way (`SettingsService.dockGround`).
     readonly property string dockStyle: SettingsService.dockGround || root.surfaceStyle
+
+    // The shell's own shadows on the bar and the dock: a blur each, so off in
+    // gaming mode with the compositor's blur and glass. The grounds keep
+    // their colour and opacity; the glass's sheen goes too (`GlassSheen`).
+    readonly property bool barShadows: SettingsService.barShadow && !SettingsService.gaming
     readonly property bool dockSolid: root.dockStyle !== "glass"
     readonly property bool dockGlass: root.dockStyle === "glass"
 
@@ -353,7 +358,7 @@ QtObject {
     readonly property real pictureCorner: 0.24
 
     // Where the notch meets the screen edge.
-    readonly property int radiusNotch: 10
+    readonly property int radiusNotch: 16
 
     // ── FIXED COLOURS ───────────────────────────────────────────────────────
     //

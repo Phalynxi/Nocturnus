@@ -107,6 +107,12 @@ Row {
     }
 
     Chip {
+        action: "switchUser"
+        glyph: "󰜺"
+        caption: "Switch user"
+    }
+
+    Chip {
         action: "reboot"
         glyph: "󰜉"
         caption: "Restart"

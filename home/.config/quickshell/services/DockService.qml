@@ -343,15 +343,11 @@ Singleton {
                 : (along - root.length) / 2)
         const away = root.edge === "left"
             ? Theme.dockMargin
-            : across - (root.attached ? 0 : Theme.dockMargin) - Theme.dockThickness
+            : across - Theme.dockMargin - Theme.dockThickness
         return root.vertical
             ? { x: away, y: start, width: Theme.dockThickness, height: root.length }
             : { x: start, y: away, width: root.length, height: Theme.dockThickness }
     }
-
-    // On the bottom edge the dock is cut into the edge, as the island is into
-    // the top (`Dock.qml`); on the sides it floats.
-    readonly property bool attached: root.edge === "bottom"
 
     // Offset that moves a hidden dock and its shadow fully off screen.
     readonly property real retreat: Theme.dockThickness + Theme.dockMargin

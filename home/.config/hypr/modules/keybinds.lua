@@ -316,6 +316,8 @@ bind(mainMod .. " + X",         hl.dsp.global("quickshell:session"), { descripti
 bind("CTRL + ALT + Delete",     hl.dsp.global("quickshell:session"), { description = "Session · Session menu, from CTRL + ALT + Delete" })
 bind("XF86PowerOff",            hl.dsp.global("quickshell:session"), { description = "Session · Session menu, from the power button" })
 bind(mainMod .. " + L",         hl.dsp.global("quickshell:lock"),    { description = "Session · Lock the screen" })
+bind(mainMod .. " + SHIFT + L", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"), { description = "Session · Log out" })
+bind(mainMod .. " + SHIFT + F", hl.dsp.exec_cmd("qs ipc call profile cycle"), { description = "Session · Cycle profile" })
 bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"), { description = "Session · Exit Hyprland" })
 
 

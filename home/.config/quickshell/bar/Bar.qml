@@ -330,8 +330,7 @@ PanelWindow {
         function onPanelToggled(panel: string): void {
             if (panel === "controls")
                 root.drawerOpen = !root.drawerOpen
-            // The launcher has its own surface (`shell.qml`).
-            else if (panel !== "launcher")
+            else
                 island.toggle(panel)
         }
 
@@ -408,7 +407,7 @@ PanelWindow {
         // does not work inside a Repeater.
         Loader {
             anchors.fill: parent
-            active: SettingsService.barShadow
+            active: Theme.barShadows
             sourceComponent: shadowBody
         }
 

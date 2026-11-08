@@ -54,6 +54,8 @@ Item {
         function onAwakeChanged(): void {
             if (!LockService.awake)
                 account.clear()
+            else
+                account.loadUsers()
         }
     }
 

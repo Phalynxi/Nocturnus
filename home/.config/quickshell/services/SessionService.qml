@@ -21,11 +21,12 @@ Singleton {
     id: root
 
     readonly property var actions: [
-        { id: "lock",     icon: "󰌾", label: "Lock",      destructive: false },
-        { id: "suspend",  icon: "󰤄", label: "Suspend",   destructive: false },
-        { id: "logout",   icon: "󰗽", label: "Log out",   destructive: true },
-        { id: "reboot",   icon: "󰜉", label: "Restart",   destructive: true },
-        { id: "shutdown", icon: "󰐥", label: "Shut down", destructive: true }
+        { id: "lock",        icon: "󰌾", label: "Lock",         destructive: false },
+        { id: "suspend",     icon: "󰤄", label: "Suspend",      destructive: false },
+        { id: "logout",      icon: "󰗽", label: "Log out",      destructive: true },
+        { id: "switchUser",  icon: "󰜺", label: "Switch user",  destructive: false },
+        { id: "reboot",      icon: "󰜉", label: "Restart",      destructive: true },
+        { id: "shutdown",    icon: "󰐥", label: "Shut down",    destructive: true }
     ]
 
     readonly property Process runner: Process {}
@@ -124,6 +125,9 @@ Singleton {
             break
         case "logout":
             Hyprland.dispatch("hl.dsp.exit()")
+            break
+        case "switchUser":
+            root.exec(["dbus-send", "--system", "--dest=org.freedesktop.DisplayManager", "/org/freedesktop/DisplayManager/Seat0", "org.freedesktop.DisplayManager.Seat.SwitchToGreeter"])
             break
         case "reboot":
             root.exec(["systemctl", "reboot"])

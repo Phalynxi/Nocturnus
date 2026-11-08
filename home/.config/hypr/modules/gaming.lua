@@ -59,9 +59,14 @@ local function fade_to(want)
     -- mode dismisses it rather than paying its refraction mid-fight. On the
     -- way back the window-glass setting's choice is restored (true while
     -- Appearance has it on; CompositorService corrects it on any change).
+    -- Both switches: `enabled` covers the windows, `layers.enabled` the
+    -- shell's surfaces (the bar, the dock), whose glass blurs on its own.
     if hl.plugin.hyprglass ~= nil then
-        hl.plugin.hyprglass.config({ enabled = not want })
+        hl.plugin.hyprglass.config({ enabled = not want, layers = { enabled = not want } })
     end
+    -- The shell draws its own glass, sheens and shadows over that blur; told
+    -- the mode, it goes solid and flat with it (`shell.qml`'s "gaming").
+    hl.exec_cmd("qs ipc call gaming set " .. (want and "true" or "false"))
     on = want
     fading_to = nil
 end
